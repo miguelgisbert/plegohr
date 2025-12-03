@@ -1,0 +1,157 @@
+{
+  "common": {
+    "login": "Iniciar sessió",
+    "signup": "Registrar-se",
+    "logout": "Tancar sessió",
+    "save": "Desar",
+    "cancel": "Cancel·lar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Tancar",
+    "submit": "Enviar",
+    "loading": "Carregant...",
+    "error": "Error",
+    "success": "Èxit"
+  },
+  "nav": {
+    "features": "Característiques",
+    "pricing": "Preus",
+    "about": "Sobre nosaltres",
+    "contact": "Contacte",
+    "dashboard": "Tauler"
+  },
+  "landing": {
+    "hero": {
+      "title": "Gestió de RRHH Moderna i Simple",
+      "subtitle": "Registra temps, gestiona documents i optimitza el teu equip amb PlegoHR",
+      "cta": "Prova Gratuïta",
+      "learnMore": "Més Informació"
+    },
+    "features": {
+      "title": "Tot el que Necessites per Gestionar el teu Equip",
+      "timeTracking": {
+        "title": "Control de Temps",
+        "description": "Registre precís de temps amb controls tipus cronòmetre per períodes de treball i descàns"
+      },
+      "documents": {
+        "title": "Gestió de Documents",
+        "description": "Emmagatzema i gestiona documents d'empleats de forma segura amb signatures electròniques"
+      },
+      "reports": {
+        "title": "Informes Avançats",
+        "description": "Genera informes detallats i exporta dades en format PDF o Excel"
+      },
+      "multilingual": {
+        "title": "Funcions Avançades",
+        "description": "Signatura electrònica de documents, anàlisi avançades, integracions personalitzades i més pròximament"
+      }
+    },
+    "pricing": {
+      "title": "Preus Simples i Transparents",
+      "subtitle": "Tria el pla que s'adapti a la mida del teu equip",
+      "free": {
+        "name": "Gratuït",
+        "price": "0€",
+        "period": "/mes",
+        "features": [
+          "Fins a 5 treballadors",
+          "Control de temps bàsic",
+          "Emmagatzematge de documents (1GB)",
+          "Informes bàsics",
+          "Suport per correu"
+        ],
+        "cta": "Començar"
+      },
+      "professional": {
+        "name": "Professional",
+        "price": "29€",
+        "period": "/mes",
+        "features": [
+          "Fins a 50 treballadors",
+          "Control de temps avançat",
+          "Emmagatzematge de documents (10GB)",
+          "Informes i analítiques avançades",
+          "Signatura electrònica certificada",
+          "Suport prioritari"
+        ],
+        "cta": "Prova Gratuïta"
+      },
+      "enterprise": {
+        "name": "Empresa",
+        "price": "Personalitzat",
+        "period": "",
+        "features": [
+          "Treballadors il·limitats",
+          "Totes les característiques Professionals",
+          "Integracions personalitzades",
+          "Gestor de compte dedicat",
+          "Suport telefònic 24/7",
+          "Garantia SLA"
+        ],
+        "cta": "Contactar Vendes"
+      }
+    },
+    "cta": {
+      "title": "Preparat per Transformar la teva Gestió de RRHH?",
+      "subtitle": "Uneix-te a centenars d'empreses que ja utilitzen PlegoHR",
+      "button": "Comença la teva Prova Gratuïta"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Benvingut de Nou",
+      "subtitle": "Inicia sessió al teu compte",
+      "email": "Correu electrònic",
+      "password": "Contrasenya",
+      "rememberMe": "Recorda'm",
+      "forgotPassword": "Has oblidat la contrasenya?",
+      "noAccount": "No tens compte?",
+      "signUpLink": "Registra't",
+      "button": "Iniciar Sessió",
+      "orContinueWith": "O continua amb",
+      "google": "Continuar amb Google",
+      "linkedin": "Continuar amb LinkedIn"
+    },
+    "signup": {
+      "title": "Crea el teu Compte",
+      "subtitle": "Comença a gestionar el teu equip avui",
+      "companyName": "Nom de l'Empresa",
+      "fullName": "Nom Complet",
+      "email": "Correu electrònic",
+      "password": "Contrasenya",
+      "confirmPassword": "Confirmar Contrasenya",
+      "haveAccount": "Ja tens compte?",
+      "loginLink": "Inicia sessió",
+      "button": "Crear Compte",
+      "terms": "En registrar-te, acceptes els nostres Termes de Servei i Política de Privacitat"
+    }
+  },
+  "dashboard": {
+    "welcome": "Benvingut, {{name}}",
+    "quickActions": "Accions Ràpides",
+    "clockIn": "Fitxar Entrada",
+    "clockOut": "Fitxar Sortida",
+    "viewReports": "Veure Informes",
+    "uploadDocument": "Pujar Document",
+    "stats": {
+      "hoursToday": "Hores Avui",
+      "hoursWeek": "Hores Aquesta Setmana",
+      "pendingDocuments": "Documents Pendents",
+      "teamMembers": "Membres de l'Equip"
+    }
+  },
+  "timer": {
+    "title": "Registre de Temps",
+    "clockIn": "Fitxar Entrada",
+    "clockOut": "Fitxar Sortida",
+    "startBreak": "Iniciar Descans",
+    "endBreak": "Finalitzar Descans",
+    "activeTime": "Temps Actiu",
+    "breakTime": "Temps de Descans",
+    "totalTime": "Temps Total",
+    "addNote": "Afegir Nota",
+    "project": "Projecte",
+    "task": "Tasca",
+    "history": "Historial de Temps"
+  }
+}

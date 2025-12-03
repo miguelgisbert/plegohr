@@ -1,0 +1,157 @@
+{
+  "common": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "nav": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact",
+    "dashboard": "Dashboard"
+  },
+  "landing": {
+    "hero": {
+      "title": "Modern HR Management Made Simple",
+      "subtitle": "Track time, manage documents, and streamline your workforce with PlegoHR",
+      "cta": "Start Free Trial",
+      "learnMore": "Learn More"
+    },
+    "features": {
+      "title": "Everything You Need to Manage Your Team",
+      "timeTracking": {
+        "title": "Time Tracking",
+        "description": "Accurate time tracking with stopwatch-style controls for work and break periods"
+      },
+      "documents": {
+        "title": "Document Management",
+        "description": "Securely store and manage employee documents with electronic signatures"
+      },
+      "reports": {
+        "title": "Advanced Reporting",
+        "description": "Generate detailed reports and export data in PDF or Excel format"
+      },
+      "multilingual": {
+        "title": "Advanced Features",
+        "description": "Document e-signatures, advanced analytics, custom integrations and more coming soon"
+      }
+    },
+    "pricing": {
+      "title": "Simple, Transparent Pricing",
+      "subtitle": "Choose the plan that fits your team size",
+      "free": {
+        "name": "Free",
+        "price": "$0",
+        "period": "/month",
+        "features": [
+          "Up to 5 workers",
+          "Basic time tracking",
+          "Document storage (1GB)",
+          "Basic reports",
+          "Email support"
+        ],
+        "cta": "Get Started"
+      },
+      "professional": {
+        "name": "Professional",
+        "price": "$29",
+        "period": "/month",
+        "features": [
+          "Up to 50 workers",
+          "Advanced time tracking",
+          "Document storage (10GB)",
+          "Advanced reports & analytics",
+          "E-signature compliance",
+          "Priority support"
+        ],
+        "cta": "Start Free Trial"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "price": "Custom",
+        "period": "",
+        "features": [
+          "Unlimited workers",
+          "All Professional features",
+          "Custom integrations",
+          "Dedicated account manager",
+          "24/7 phone support",
+          "SLA guarantee"
+        ],
+        "cta": "Contact Sales"
+      }
+    },
+    "cta": {
+      "title": "Ready to Transform Your HR Management?",
+      "subtitle": "Join hundreds of companies already using PlegoHR",
+      "button": "Start Your Free Trial"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your account",
+      "email": "Email address",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up",
+      "button": "Sign In",
+      "orContinueWith": "Or continue with",
+      "google": "Continue with Google",
+      "linkedin": "Continue with LinkedIn"
+    },
+    "signup": {
+      "title": "Create Your Account",
+      "subtitle": "Start managing your team today",
+      "companyName": "Company Name",
+      "fullName": "Full Name",
+      "email": "Email address",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Sign in",
+      "button": "Create Account",
+      "terms": "By signing up, you agree to our Terms of Service and Privacy Policy"
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "quickActions": "Quick Actions",
+    "clockIn": "Clock In",
+    "clockOut": "Clock Out",
+    "viewReports": "View Reports",
+    "uploadDocument": "Upload Document",
+    "stats": {
+      "hoursToday": "Hours Today",
+      "hoursWeek": "Hours This Week",
+      "pendingDocuments": "Pending Documents",
+      "teamMembers": "Team Members"
+    }
+  },
+  "timer": {
+    "title": "Time Tracker",
+    "clockIn": "Clock In",
+    "clockOut": "Clock Out",
+    "startBreak": "Start Break",
+    "endBreak": "End Break",
+    "activeTime": "Active Time",
+    "breakTime": "Break Time",
+    "totalTime": "Total Time",
+    "addNote": "Add Note",
+    "project": "Project",
+    "task": "Task",
+    "history": "Time History"
+  }
+}

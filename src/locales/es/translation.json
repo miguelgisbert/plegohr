@@ -1,0 +1,157 @@
+{
+  "common": {
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "logout": "Cerrar sesión",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "submit": "Enviar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  },
+  "nav": {
+    "features": "Características",
+    "pricing": "Precios",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "dashboard": "Panel"
+  },
+  "landing": {
+    "hero": {
+      "title": "Gestión de RRHH Moderna y Simple",
+      "subtitle": "Registra tiempo, gestiona documentos y optimiza tu equipo con PlegoHR",
+      "cta": "Prueba Gratis",
+      "learnMore": "Más Información"
+    },
+    "features": {
+      "title": "Todo lo que Necesitas para Gestionar tu Equipo",
+      "timeTracking": {
+        "title": "Control de Tiempo",
+        "description": "Registro preciso de tiempo con controles tipo cronómetro para periodos de trabajo y descanso"
+      },
+      "documents": {
+        "title": "Gestión de Documentos",
+        "description": "Almacena y gestiona documentos de empleados de forma segura con firmas electrónicas"
+      },
+      "reports": {
+        "title": "Informes Avanzados",
+        "description": "Genera informes detallados y exporta datos en formato PDF o Excel"
+      },
+      "multilingual": {
+        "title": "Funciones Avanzadas",
+        "description": "Firma electrónica de documentos, análisis avanzados, integraciones personalizadas y más próximamente"
+      }
+    },
+    "pricing": {
+      "title": "Precios Simples y Transparentes",
+      "subtitle": "Elige el plan que se adapte al tamaño de tu equipo",
+      "free": {
+        "name": "Gratis",
+        "price": "0€",
+        "period": "/mes",
+        "features": [
+          "Hasta 20 trabajadores",
+          "Control de tiempo básico",
+          "Almacenamiento de documentos (1GB)",
+          "Informes básicos",
+          "Soporte por email"
+        ],
+        "cta": "Comenzar"
+      },
+      "professional": {
+        "name": "Profesional",
+        "price": "29€",
+        "period": "/mes",
+        "features": [
+          "Hasta 100 trabajadores",
+          "Control de tiempo avanzado",
+          "Almacenamiento de documentos (10GB)",
+          "Informes y analíticas avanzadas",
+          "Firma electrónica certificada",
+          "Soporte prioritario"
+        ],
+        "cta": "Prueba Gratis"
+      },
+      "enterprise": {
+        "name": "Empresa",
+        "price": "Personalizado",
+        "period": "",
+        "features": [
+          "Trabajadores ilimitados",
+          "Todas las características Profesionales",
+          "Integraciones personalizadas",
+          "Gestor de cuenta dedicado",
+          "Soporte telefónico 24/7",
+          "Garantía SLA"
+        ],
+        "cta": "Contactar Ventas"
+      }
+    },
+    "cta": {
+      "title": "¿Listo para Transformar tu Gestión de RRHH?",
+      "subtitle": "Únete a cientos de empresas que ya usan PlegoHR",
+      "button": "Comienza tu Prueba Gratis"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bienvenido de Nuevo",
+      "subtitle": "Inicia sesión en tu cuenta",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "rememberMe": "Recordarme",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "noAccount": "¿No tienes cuenta?",
+      "signUpLink": "Regístrate",
+      "button": "Iniciar Sesión",
+      "orContinueWith": "O continúa con",
+      "google": "Continuar con Google",
+      "linkedin": "Continuar con LinkedIn"
+    },
+    "signup": {
+      "title": "Crea tu Cuenta",
+      "subtitle": "Comienza a gestionar tu equipo hoy",
+      "companyName": "Nombre de la Empresa",
+      "fullName": "Nombre Completo",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar Contraseña",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "loginLink": "Inicia sesión",
+      "button": "Crear Cuenta",
+      "terms": "Al registrarte, aceptas nuestros Términos de Servicio y Política de Privacidad"
+    }
+  },
+  "dashboard": {
+    "welcome": "Bienvenido, {{name}}",
+    "quickActions": "Acciones Rápidas",
+    "clockIn": "Fichar Entrada",
+    "clockOut": "Fichar Salida",
+    "viewReports": "Ver Informes",
+    "uploadDocument": "Subir Documento",
+    "stats": {
+      "hoursToday": "Horas Hoy",
+      "hoursWeek": "Horas Esta Semana",
+      "pendingDocuments": "Documentos Pendientes",
+      "teamMembers": "Miembros del Equipo"
+    }
+  },
+  "timer": {
+    "title": "Registro de Tiempo",
+    "clockIn": "Fichar Entrada",
+    "clockOut": "Fichar Salida",
+    "startBreak": "Iniciar Descanso",
+    "endBreak": "Finalizar Descanso",
+    "activeTime": "Tiempo Activo",
+    "breakTime": "Tiempo de Descanso",
+    "totalTime": "Tiempo Total",
+    "addNote": "Añadir Nota",
+    "project": "Proyecto",
+    "task": "Tarea",
+    "history": "Historial de Tiempo"
+  }
+}
