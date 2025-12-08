@@ -13,6 +13,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  role: 'admin' | 'employee' | null;
+  companyId: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (
     email: string,
@@ -31,40 +33,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const companySetupInFlightRef = useRef<Map<string, Promise<void>>>(new Map());
+  const [role, setRole] = useState<'admin' | 'employee' | null>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
 
-  const runCompanySetupOnce = (currentUser: User) => {
-    const existingTask = companySetupInFlightRef.current.get(currentUser.id);
-    if (existingTask) {
-      return existingTask;
-    }
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role, company_id')
+        .eq('id', userId)
+        .maybeSingle();
 
-    const task = (async () => {
-      try {
-        await ensureCompanySetup(currentUser);
-      } finally {
-        companySetupInFlightRef.current.delete(currentUser.id);
+      if (error) {
+        console.error('Error loading user profile:', error);
+        setRole(null);
+        setCompanyId(null);
+        return;
       }
-    })();
 
-    companySetupInFlightRef.current.set(currentUser.id, task);
-    return task;
+      if (profile) {
+        setRole(profile.role as 'admin' | 'employee');
+        setCompanyId(profile.company_id);
+      } else {
+        setRole(null);
+        setCompanyId(null);
+      }
+    } catch (err) {
+      console.error('Unexpected error loading profile:', err);
+      setRole(null);
+      setCompanyId(null);
+    }
   };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-
       if (session?.user) {
-        runCompanySetupOnce(session.user).catch((error) => {
-          console.error(
-            "Failed to complete company setup from existing session:",
-            error,
-          );
-        });
+        loadUserProfile(session.user.id);
       }
-
       setLoading(false);
     });
 
@@ -74,19 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (async () => {
         setSession(session);
         setUser(session?.user ?? null);
-
-        if (
-          (event === "SIGNED_IN" || event === "INITIAL_SESSION") &&
-          session?.user
-        ) {
-          try {
-            await runCompanySetupOnce(session.user);
-          } catch (error) {
-            console.error(
-              "Failed to complete company setup after auth state change:",
-              error,
-            );
-          }
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        } else {
+          setRole(null);
+          setCompanyId(null);
         }
       })();
     });
@@ -218,18 +217,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Signup error:', error);
+      throw error;
+    }
 
     if (!data.user) {
       throw new Error("Failed to create user");
     }
 
     if (companyName) {
-      if (!data.session) {
-        return { requiresEmailConfirmation: true };
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      let retries = 0;
+      const maxRetries = 5;
+      let profileExists = false;
+
+      while (retries < maxRetries && !profileExists) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .maybeSingle();
+
+        if (profile) {
+          profileExists = true;
+          console.log('Profile found:', profile);
+        } else {
+          console.log(`Profile not found, retry ${retries + 1}/${maxRetries}`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          retries++;
+        }
       }
 
-      await runCompanySetupOnce(data.user);
+      if (!profileExists) {
+        console.error('Profile creation failed after retries');
+        throw new Error('Profile creation failed. Please try logging in.');
+      }
+
+      const { error: companyError } = await supabase
+        .from('companies')
+        .insert({
+          name: companyName,
+          owner_id: data.user.id,
+        });
+
+      if (companyError) {
+        console.error('Company creation error:', companyError);
+        throw new Error(`Failed to create company: ${companyError.message}`);
+      }
+
+      const { data: company } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('owner_id', data.user.id)
+        .maybeSingle();
+
+      if (company) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            company_id: company.id,
+            role: 'admin',
+          })
+          .eq('id', data.user.id);
+
+        if (updateError) {
+          throw new Error(`Failed to link profile to company: ${updateError.message}`);
+        }
+      }
     }
 
     return { requiresEmailConfirmation: !data.session };
@@ -266,6 +322,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         loading,
+        role,
+        companyId,
         signIn,
         signUp,
         signInWithGoogle,

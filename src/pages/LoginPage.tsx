@@ -7,7 +7,7 @@ import { Navigation } from '../components/landing/Navigation';
 
 export function LoginPage() {
   const { t } = useTranslation();
-  const { signIn, signInWithGoogle, signInWithLinkedIn } = useAuth();
+  const { signIn, signInWithGoogle, signInWithLinkedIn, role } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,10 +21,20 @@ export function LoginPage() {
 
     try {
       await signIn(email, password);
-      navigate('/dashboard');
+      // The role will be loaded by AuthContext, but we need a small delay
+      // to ensure the profile is loaded before redirecting
+      setTimeout(() => {
+        // Redirection will be handled by checking role in useEffect below
+        // For now, redirect based on the current role state
+        if (role === 'admin') {
+          navigate('/dashboard');
+        } else if (role === 'employee') {
+          navigate('/employee-dashboard');
+        }
+        // If role is null, stay on login (will be caught by ProtectedRoute)
+      }, 500);
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');
-    } finally {
       setLoading(false);
     }
   };

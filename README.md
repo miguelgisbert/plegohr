@@ -1,33 +1,55 @@
 # PlegoHR - Modern HR Management System
 
-A comprehensive HR management platform built with React, TypeScript, Supabase, and Material-UI.
+A comprehensive HR management platform built with React, TypeScript, Supabase, and Tailwind CSS.
+
+> **🚀 Quick Start**: Read [`QUICK_START.md`](./QUICK_START.md) first - it has everything you need to get running in 15 minutes!
+
+## ⚡ Project Status
+
+✅ **Authentication System** - Complete (login, signup, password reset)
+✅ **Role-Based Access Control** - Complete (admin & employee roles)
+✅ **Password Reset Feature** - Complete (forgot password via email)
+⏳ **Supabase Setup** - Pending (create tables from migrations)
+⏳ **Time Tracking** - In Progress (UI ready, DB integration pending)
+⏳ **Documents Management** - Pending
+⏳ **Leave Requests** - Pending
 
 ## Features
 
-- 👥 Employee Management
-- 📄 Document Management with File Storage
-- 🏖️ Leave Request System (Holidays, Sick Days, Custom Leave Types)
-- 🔐 Secure Authentication & Authorization
+### ✅ Implemented
+- 🔐 Email/Password Authentication
+- 🔑 OAuth (Google & LinkedIn)
+- 📧 Password Reset via Email (Forgot Password)
+- 👥 Employee Invitation System
+- 🔑 Role-Based Access Control (Admin & Employee)
+- 🕐 Time Tracking Interface (UI ready)
 - 🌓 Dark Mode Support
-- 🌍 Multi-language Support (English, Spanish, Catalan)
+- 🌍 Multi-language (English, Spanish, Catalan)
 - 📱 Responsive Design
+- 🔒 Row Level Security (RLS) Policies
+
+### ⏳ Pending
+- 📊 Time Entries Database Integration
+- 📄 Document Management
+- 🏖️ Leave Request System
+- 📈 Reports & Analytics
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite
-- **UI Framework**: Material-UI (MUI) v7
-- **Styling**: Tailwind CSS
-- **Backend**: Supabase (PostgreSQL, Auth, Storage)
-- **Database**: PostgreSQL with Row Level Security (RLS)
-- **Icons**: Lucide React, MUI Icons
-- **Routing**: React Router v7
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS 4
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **Routing**: React Router v6
+- **Icons**: Lucide React
 - **i18n**: react-i18next
+- **State**: React Context API
 
 ## Getting Started
 
 ### Prerequisites
-
 - Node.js 18+ and npm
+- Supabase account (free tier available)
+
 - A Supabase account (free tier available)
 - Git
 

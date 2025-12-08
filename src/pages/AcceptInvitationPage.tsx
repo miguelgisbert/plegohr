@@ -107,6 +107,9 @@ export function AcceptInvitationPage() {
         return;
       }
 
+      // Wait a bit for the profile to be created by the trigger
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const { error: updateInvitationError } = await supabase
         .from("employee_invitations")
         .update({
@@ -128,8 +131,29 @@ export function AcceptInvitationPage() {
         console.error("Error linking employee:", updateEmployeeError);
       }
 
-      setSuccess(true);
-      setTimeout(() => navigate("/login"), 3000);
+      // Get the employee's company_id to set in profile
+      const { data: employeeData } = await supabase
+        .from('employees')
+        .select('company_id')
+        .eq('id', invitation.employee_id)
+        .maybeSingle();
+
+      if (employeeData) {
+        const { error: updateProfileError } = await supabase
+          .from('profiles')
+          .update({
+            role: 'employee',
+            company_id: employeeData.company_id,
+          })
+          .eq('id', authData.user.id);
+
+        if (updateProfileError) {
+          console.error('Error updating profile:', updateProfileError);
+        }
+      }
+
+      alert('Account created successfully! You can now sign in.');
+      navigate('/login');
     } catch (err) {
       console.error("Unexpected error:", err);
       setFormError(t("invitation.error.unexpected"));

@@ -7,7 +7,7 @@ import { Navigation } from "../components/landing/Navigation";
 
 export function SignupPage() {
   const { t } = useTranslation();
-  const { signUp, signInWithGoogle, signInWithLinkedIn } = useAuth();
+  const { signUp, signInWithGoogle, signInWithLinkedIn, role } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     companyName: "",
@@ -42,24 +42,21 @@ export function SignupPage() {
     setLoading(true);
 
     try {
-      const result = await signUp(
-        formData.email,
-        formData.password,
-        formData.fullName,
-        formData.companyName,
-      );
-
-      if (result.requiresEmailConfirmation) {
-        setSuccess(t("auth.signup.success.checkEmail"));
-      } else {
-        setSuccess(t("auth.signup.success.redirecting"));
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1500);
-      }
+      await signUp(formData.email, formData.password, formData.fullName, formData.companyName);
+      setSuccess('Account created successfully! Redirecting to dashboard...');
+      // Wait for role to be loaded and then redirect
+      setTimeout(() => {
+        if (role === 'admin') {
+          navigate('/dashboard');
+        } else if (role === 'employee') {
+          navigate('/employee-dashboard');
+        }
+        // If role is null, stay on signup (will be caught by ProtectedRoute)
+      }, 500);
     } catch (err: any) {
-      setError(err.message || t("auth.signup.errors.createFailed"));
-    } finally {
+      console.error('Sign up error:', err);
+      const errorMessage = err.message || 'Failed to create account';
+      setError(errorMessage);
       setLoading(false);
     }
   };
