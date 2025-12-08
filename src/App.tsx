@@ -5,6 +5,8 @@ import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { EmployeeDashboardPage } from './pages/EmployeeDashboardPage';
 import { AcceptInvitationPage } from './pages/AcceptInvitationPage';
@@ -29,6 +31,8 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
 
             {/* Preview / demo routes (no auth required) */}

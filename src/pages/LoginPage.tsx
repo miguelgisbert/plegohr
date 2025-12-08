@@ -96,13 +96,21 @@ export function LoginPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('auth.login.password')}
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+              <Link
+                to="/forgot-password"
+                className="text-xs text-teal-600 dark:text-teal-400 hover:underline mt-1 inline-block"
+              >
+                {t('auth.login.forgotPassword') || 'Forgot password?'}
+              </Link>
             </div>
 
             <button
