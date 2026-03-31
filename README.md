@@ -94,6 +94,20 @@ supabase db push
 supabase functions deploy send-employee-invitation
 ```
 
+### Backend Workflow (Recommended)
+
+For this repository, use the dedicated guide:
+
+- `SUPABASE_WORKFLOW.md`
+
+It includes:
+
+- Supabase CLI installation on Windows
+- project linking
+- migration execution
+- Edge Function deployment
+- frontend vs backend deployment responsibilities
+
 ### 7. Run Development Server
 
 ```bash
@@ -125,6 +139,7 @@ Visit `http://localhost:5173` in your browser.
 #### 1. **Vercel** (Recommended - Best for this stack)
 
 **Why Vercel:**
+
 - ✅ **Completely free** for personal/small projects
 - ✅ Automatic deployments from GitHub
 - ✅ Built-in CI/CD
@@ -146,6 +161,7 @@ vercel
 ```
 
 Or use the Vercel GitHub integration:
+
 1. Go to [vercel.com](https://vercel.com)
 2. Sign up with GitHub
 3. Click "Import Project"
@@ -156,6 +172,7 @@ Or use the Vercel GitHub integration:
 6. Deploy!
 
 **Free Tier Includes:**
+
 - Unlimited deployments
 - Automatic HTTPS
 - 100GB bandwidth/month
@@ -166,6 +183,7 @@ Or use the Vercel GitHub integration:
 #### 2. **Netlify** (Great Alternative)
 
 **Why Netlify:**
+
 - ✅ Free tier is generous
 - ✅ Easy to use
 - ✅ GitHub integration
@@ -187,6 +205,7 @@ netlify deploy --prod
 ```
 
 **Free Tier Includes:**
+
 - 100GB bandwidth/month
 - 300 build minutes/month
 - Automatic HTTPS
@@ -196,6 +215,7 @@ netlify deploy --prod
 #### 3. **Cloudflare Pages** (Fastest Global Performance)
 
 **Why Cloudflare:**
+
 - ✅ Completely free (no credit card needed)
 - ✅ Unlimited bandwidth
 - ✅ Fastest global CDN
@@ -213,6 +233,7 @@ netlify deploy --prod
 6. Deploy!
 
 **Free Tier Includes:**
+
 - Unlimited bandwidth
 - Unlimited requests
 - 500 builds/month
@@ -222,6 +243,7 @@ netlify deploy --prod
 ### Database: Supabase (Already Configured)
 
 **Why Supabase:**
+
 - ✅ **Free tier is VERY generous**
 - ✅ PostgreSQL database
 - ✅ Built-in authentication
@@ -231,6 +253,7 @@ netlify deploy --prod
 - ✅ API auto-generated
 
 **Free Tier Includes:**
+
 - 500MB database space
 - 1GB file storage
 - 2GB bandwidth
@@ -238,6 +261,7 @@ netlify deploy --prod
 - Unlimited API requests
 
 **When to Upgrade:**
+
 - Pro Plan ($25/month):
   - 8GB database
   - 100GB file storage
@@ -259,6 +283,7 @@ Auth:      Supabase Auth (Free)
 ```
 
 **This gives you:**
+
 - Professional domain (yourapp.vercel.app)
 - HTTPS
 - Global CDN
@@ -360,6 +385,7 @@ npm run typecheck    # Check TypeScript types
 ### Deployment
 
 With Vercel/Netlify/Cloudflare connected to GitHub:
+
 - Just push to `main` branch
 - Automatic deployment happens
 - Preview deployments for PRs
@@ -378,6 +404,7 @@ With Vercel/Netlify/Cloudflare connected to GitHub:
 ### Row Level Security (RLS)
 
 All database tables have RLS enabled. Users can only:
+
 - View their own company's data
 - Modify their own records
 - Access files they own

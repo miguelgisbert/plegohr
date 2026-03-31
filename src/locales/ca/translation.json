@@ -11,14 +11,56 @@
     "submit": "Enviar",
     "loading": "Carregant...",
     "error": "Error",
-    "success": "Èxit"
+    "success": "Èxit",
+    "add": "Afegir",
+    "update": "Actualitzar",
+    "upload": "Pujar",
+    "download": "Descarregar",
+    "review": "Revisar",
+    "approve": "Aprovar",
+    "reject": "Denegar",
+    "send": "Enviar",
+    "search": "Cercar",
+    "back": "Tornar",
+    "actions": "Accions",
+    "confirm": "Confirmar",
+    "yes": "Sí",
+    "no": "No",
+    "status": {
+      "active": "Actiu",
+      "inactive": "Inactiu",
+      "pending": "Pendent",
+      "approved": "Aprovat",
+      "rejected": "Denegat",
+      "signed": "Signat"
+    }
   },
   "nav": {
     "features": "Característiques",
     "pricing": "Preus",
     "about": "Sobre nosaltres",
     "contact": "Contacte",
-    "dashboard": "Tauler"
+    "dashboard": "Tauler",
+    "documents": "Documents",
+    "leave": "Vacances"
+  },
+  "demo": {
+    "banner": "Mode Demo — Les dades mostrades són fictícies. Cap acció es guarda.",
+    "back": "Tornar",
+    "employeeAdded": "Empleat afegit i invitació enviada (demo)",
+    "employeeUpdated": "Empleat actualitzat (demo)",
+    "employeeDeleted": "Empleat eliminat (demo)",
+    "invitationResent": "Invitació reenviada (demo)",
+    "documentUploaded": "Document pujat correctament (demo)",
+    "documentDeleted": "Document eliminat (demo)",
+    "downloading": "Descarregant (demo)...",
+    "documentSigned": "Document signat correctament (demo)",
+    "leaveTypeAdded": "Tipus de vacança afegit (demo)",
+    "leaveTypeUpdated": "Tipus de vacança actualitzat (demo)",
+    "leaveTypeDeleted": "Tipus de vacança eliminat (demo)",
+    "leaveApproved": "Sol·licitud de vacances aprovada (demo)",
+    "leaveRejected": "Sol·licitud de vacances denegada (demo)",
+    "leaveSubmitted": "Sol·licitud de vacances enviada correctament (demo)"
   },
   "landing": {
     "hero": {
@@ -27,11 +69,19 @@
       "cta": "Prova Gratuïta",
       "learnMore": "Més Informació"
     },
+    "preview": {
+      "title": "Vista Prèvia de les Pàgines",
+      "company": "Empresa",
+      "employee": "Empleat",
+      "dashboard": "Tauler",
+      "documents": "Documents",
+      "leave": "Vacances"
+    },
     "features": {
       "title": "Tot el que Necessites per Gestionar el teu Equip",
       "timeTracking": {
         "title": "Control de Temps",
-        "description": "Registre precís de temps amb controls tipus cronòmetre per períodes de treball i descàns"
+        "description": "Registre precís de temps amb controls tipus cronòmetre per períodes de treball i descans"
       },
       "documents": {
         "title": "Gestió de Documents",
@@ -123,11 +173,24 @@
       "haveAccount": "Ja tens compte?",
       "loginLink": "Inicia sessió",
       "button": "Crear Compte",
-      "terms": "En registrar-te, acceptes els nostres Termes de Servei i Política de Privacitat"
+      "terms": "En registrar-te, acceptes els nostres Termes de Servei i Política de Privacitat",
+      "success": {
+        "redirecting": "Compte creat correctament! Redirigint al tauler...",
+        "checkEmail": "Compte creat. Revisa el teu correu per confirmar el compte i després inicia sessió per completar la configuració de l'empresa."
+      },
+      "errors": {
+        "passwordMismatch": "Les contrasenyes no coincideixen",
+        "passwordMinLength": "La contrasenya ha de tenir almenys 6 caràcters",
+        "createFailed": "No s'ha pogut crear el compte"
+      }
+    },
+    "confirmation": {
+      "success": "El teu compte s'ha confirmat correctament. Ja pots continuar utilitzant l'aplicació.",
+      "linkExpired": "Aquest enllaç de confirmació ha caducat. Demana un nou correu de confirmació des de la pantalla d'inici de sessió."
     }
   },
   "dashboard": {
-    "welcome": "Benvingut, {{name}}",
+    "welcome": "Benvingut/da, {{name}}",
     "quickActions": "Accions Ràpides",
     "clockIn": "Fitxar Entrada",
     "clockOut": "Fitxar Sortida",
@@ -140,12 +203,71 @@
       "teamMembers": "Membres de l'Equip"
     }
   },
+  "employees": {
+    "title": "Empleats",
+    "subtitle": "Gestiona els membres del teu equip",
+    "add": "Afegir Empleat",
+    "editTitle": "Editar Empleat",
+    "resendInvitation": "Reenviar invitació",
+    "empty": {
+      "title": "Encara no hi ha empleats",
+      "description": "Comença a construir el teu equip afegint empleats"
+    },
+    "form": {
+      "fullName": "Nom Complet",
+      "email": "Correu electrònic",
+      "position": "Càrrec",
+      "department": "Departament"
+    },
+    "columns": {
+      "name": "Nom",
+      "email": "Correu",
+      "position": "Càrrec",
+      "department": "Departament",
+      "status": "Estat",
+      "actions": "Accions"
+    },
+    "confirmDelete": "Segur que vols eliminar aquest empleat? Aquesta acció no es pot desfer.",
+    "toast": {
+      "added": "Empleat afegit i invitació enviada correctament!",
+      "updated": "Empleat actualitzat correctament!",
+      "deleted": "Empleat eliminat correctament!",
+      "invitationSent": "Invitació enviada correctament!",
+      "invitationFailed": "Empleat creat però l'email d'invitació ha fallat.",
+      "sendFailed": "Error en enviar l'email d'invitació.",
+      "addFailed": "Error en crear l'empleat: {{error}}",
+      "updateFailed": "Error en actualitzar l'empleat: {{error}}",
+      "deleteFailed": "Error en eliminar l'empleat: {{error}}",
+      "authError": "Error d'autenticació. Si us plau, inicia sessió de nou.",
+      "noCompany": "Empresa no trobada. Si us plau, recarrega la pàgina.",
+      "unexpected": "S'ha produït un error inesperat. Si us plau, torna-ho a intentar."
+    },
+    "invitation": {
+      "title": "Empleat Afegit",
+      "instructions": "Comparteix aquest enllaç amb l'empleat perquè pugui crear el seu compte:",
+      "copy": "Copiar Enllaç",
+      "copied": "Copiat!",
+      "close": "Fet"
+    }
+  },
   "timer": {
     "title": "Registre de Temps",
-    "clockIn": "Fitxar Entrada",
-    "clockOut": "Fitxar Sortida",
-    "startBreak": "Iniciar Descans",
-    "endBreak": "Finalitzar Descans",
+    "workTime": "Temps de treball",
+    "pauseTime": "Temps de pausa",
+    "startWork": "INICIAR JORNADA",
+    "endWork": "FINALITZAR JORNADA",
+    "startPause": "INICIAR PAUSA",
+    "endPause": "ACABAR PAUSA",
+    "endDay": "FINALITZAR DIA",
+    "clockIn": "Entrada",
+    "clockOut": "Sortida",
+    "pauseStart": "Inici pausa",
+    "pauseEnd": "Fi pausa",
+    "summary": "Resum del dia",
+    "workedTime": "Temps treballat",
+    "pausedTime": "Temps de pausa",
+    "dayEnded": "Jornada finalitzada. Bon descans!",
+    "resetDemo": "Reiniciar demo",
     "activeTime": "Temps Actiu",
     "breakTime": "Temps de Descans",
     "totalTime": "Temps Total",
@@ -153,5 +275,185 @@
     "project": "Projecte",
     "task": "Tasca",
     "history": "Historial de Temps"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Gestiona els documents dels empleats",
+    "myTitle": "Els meus Documents",
+    "mySubtitle": "Visualitza i descarrega els teus documents d'ocupació",
+    "upload": "Pujar Document",
+    "uploadModal": {
+      "title": "Pujar Document",
+      "employee": "Empleat",
+      "selectEmployee": "Selecciona un empleat",
+      "type": "Tipus de document",
+      "description": "Descripció",
+      "descriptionPlaceholder": "Descripció del document...",
+      "fileLabel": "Fitxer (demo)",
+      "filePlaceholder": "Clica per seleccionar un fitxer (simulat en demo)"
+    },
+    "types": {
+      "contract": "Contracte",
+      "payslip": "Nòmina",
+      "certificate": "Certificat",
+      "id": "Document d'identitat",
+      "other": "Altre"
+    },
+    "columns": {
+      "document": "Document",
+      "employee": "Empleat",
+      "type": "Tipus",
+      "size": "Mida",
+      "date": "Data",
+      "status": "Estat",
+      "actions": "Accions"
+    },
+    "uploading": "Pujant...",
+    "filters": {
+      "searchPlaceholder": "Cercar documents...",
+      "allEmployees": "Tots els empleats",
+      "allTypes": "Tots els tipus"
+    },
+    "empty": {
+      "title": "Cap document trobat",
+      "description": "Ajusta els filtres o puja un nou document",
+      "noCompanyDocs": "La teva empresa encara no ha pujat cap document",
+      "noSearchResults": "Cap document coincideix amb els criteris de cerca"
+    },
+    "about": {
+      "title": "Sobre els teus documents",
+      "description": "Tots els documents pujats per la teva empresa es guarden de forma segura i xifrada. Pots descarregar aquests documents en qualsevol moment. Si tens dubtes sobre algun document, contacta amb el teu departament de RRHH."
+    },
+    "stats": {
+      "total": "Total documents",
+      "pendingSignature": "Pendent de signatura",
+      "signed": "Signats"
+    },
+    "pendingSignatureSection": "Pendent de signatura",
+    "allDocuments": "Tots els documents",
+    "viewAndSign": "Veure i signar",
+    "previewTitle": "Vista prèvia del document (demo)",
+    "confirmDelete": "Segur que vols eliminar aquest document?",
+    "status": {
+      "signed": "Signat",
+      "pending": "Pendent"
+    },
+    "toast": {
+      "uploaded": "Document pujat correctament!",
+      "deleted": "Document eliminat correctament!",
+      "signed": "Document signat correctament!",
+      "uploadFailed": "Error en pujar el document: {{error}}",
+      "deleteFailed": "Error en eliminar el document: {{error}}"
+    }
+  },
+  "leave": {
+    "title": "Gestió de Vacances",
+    "subtitle": "Gestiona els tipus de vacança i revisa les sol·licituds dels empleats",
+    "myTitle": "Les meves Vacances",
+    "mySubtitle": "Sol·licita dies lliures i consulta l'estat de les teves peticions",
+    "newRequest": "Nova Sol·licitud",
+    "requestsTitle": "Sol·licituds de vacances",
+    "types": {
+      "sectionTitle": "Tipus de Vacança",
+      "namePlaceholder": "Nom del tipus de vacança...",
+      "addModal": "Afegir Tipus de Vacança",
+      "editModal": "Editar Tipus de Vacança",
+      "confirmDelete": "Segur que vols eliminar aquest tipus?",
+      "empty": "Encara no hi ha tipus de vacança"
+    },
+    "stats": {
+      "pending": "Pendents",
+      "approved": "Aprovades",
+      "rejected": "Denegades",
+      "totalApprovedDays": "Dies aprovats totals",
+      "summary": "Resum"
+    },
+    "columns": {
+      "employee": "Empleat",
+      "type": "Tipus",
+      "dates": "Dates",
+      "days": "Dies",
+      "reason": "Motiu",
+      "status": "Estat",
+      "actions": "Accions",
+      "requested": "Sol·licitat"
+    },
+    "filters": {
+      "allStatuses": "Tots els estats",
+      "pending": "Pendents",
+      "approved": "Aprovades",
+      "rejected": "Denegades"
+    },
+    "empty": {
+      "requestsTitle": "Cap sol·licitud trobada",
+      "requestsDescription": "Les sol·licituds apareixeran aquí quan els empleats les enviïn",
+      "myTitle": "Encara no hi ha sol·licituds",
+      "myDescription": "Fes clic a \"Nova Sol·licitud\" per enviar la teva primera sol·licitud"
+    },
+    "review": {
+      "title": "Revisar Sol·licitud",
+      "employee": "Empleat",
+      "type": "Tipus de Vacança",
+      "period": "Període",
+      "reason": "Motiu",
+      "notes": "Notes de revisió (opcional)",
+      "notesPlaceholder": "Afegeix notes sobre la decisió...",
+      "approve": "Aprovar",
+      "reject": "Denegar",
+      "hrNote": "Nota RRHH"
+    },
+    "request": {
+      "title": "Nova Sol·licitud de Vacances",
+      "type": "Tipus de Vacança",
+      "selectType": "Selecciona un tipus",
+      "startDate": "Data d'inici",
+      "endDate": "Data de fi",
+      "reason": "Motiu",
+      "reasonPlaceholder": "Si us plau, indica el motiu de la teva sol·licitud...",
+      "daysRequested": "{{count}} dies sol·licitats",
+      "submit": "Enviar Sol·licitud"
+    },
+    "status": {
+      "pending": "Pendent",
+      "approved": "Aprovat",
+      "rejected": "Denegat"
+    },
+    "historyTitle": "Historial de sol·licituds",
+    "until": "fins",
+    "toast": {
+      "typeAdded": "Tipus de vacança afegit correctament!",
+      "typeUpdated": "Tipus de vacança actualitzat correctament!",
+      "typeDeleted": "Tipus de vacança eliminat correctament!",
+      "approved": "Sol·licitud de vacances aprovada!",
+      "rejected": "Sol·licitud de vacances denegada!",
+      "submitted": "Sol·licitud de vacances enviada correctament!"
+    }
+  },
+  "invitation": {
+    "loading": "Carregant invitació...",
+    "invalidTitle": "Invitació No Vàlida",
+    "goHome": "Anar a l'Inici",
+    "title": "Acceptar Invitació",
+    "subtitle": "Crea el teu compte per unir-te a l'equip",
+    "emailLabel": "Email",
+    "passwordLabel": "Contrasenya",
+    "passwordPlaceholder": "Mínim 6 caràcters",
+    "confirmLabel": "Confirmar Contrasenya",
+    "confirmPlaceholder": "Torna a introduir la teva contrasenya",
+    "submitting": "Creant compte...",
+    "submit": "Crear Compte i Acceptar",
+    "alreadyAccount": "Ja tens un compte?",
+    "signIn": "Iniciar sessió",
+    "success": "Compte creat correctament! Ja pots iniciar sessió.",
+    "error": {
+      "invalidLink": "Enllaç d'invitació no vàlid",
+      "notFound": "Invitació no trobada o ha caducat",
+      "expired": "Aquesta invitació ha caducat",
+      "passwordMismatch": "Les contrasenyes no coincideixen",
+      "passwordTooShort": "La contrasenya ha de tenir almenys 6 caràcters",
+      "createFailed": "Error en crear el compte: {{message}}",
+      "createAccountFailed": "Error en crear el compte",
+      "unexpected": "S'ha produït un error inesperat. Si us plau, torna-ho a intentar."
+    }
   }
 }

@@ -11,14 +11,56 @@
     "submit": "Submit",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "add": "Add",
+    "update": "Update",
+    "upload": "Upload",
+    "download": "Download",
+    "review": "Review",
+    "approve": "Approve",
+    "reject": "Reject",
+    "send": "Send",
+    "search": "Search",
+    "back": "Back",
+    "actions": "Actions",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "signed": "Signed"
+    }
   },
   "nav": {
     "features": "Features",
     "pricing": "Pricing",
     "about": "About",
     "contact": "Contact",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "documents": "Documents",
+    "leave": "Leave"
+  },
+  "demo": {
+    "banner": "Demo Mode — Data shown is fictional. No actions are saved.",
+    "back": "Back",
+    "employeeAdded": "Employee added and invitation sent (demo)",
+    "employeeUpdated": "Employee updated (demo)",
+    "employeeDeleted": "Employee deleted (demo)",
+    "invitationResent": "Invitation resent (demo)",
+    "documentUploaded": "Document uploaded successfully (demo)",
+    "documentDeleted": "Document deleted (demo)",
+    "downloading": "Downloading (demo)...",
+    "documentSigned": "Document signed successfully (demo)",
+    "leaveTypeAdded": "Leave type added (demo)",
+    "leaveTypeUpdated": "Leave type updated (demo)",
+    "leaveTypeDeleted": "Leave type deleted (demo)",
+    "leaveApproved": "Leave request approved (demo)",
+    "leaveRejected": "Leave request rejected (demo)",
+    "leaveSubmitted": "Leave request submitted successfully (demo)"
   },
   "landing": {
     "hero": {
@@ -26,6 +68,14 @@
       "subtitle": "Track time, manage documents, and streamline your workforce with PlegoHR",
       "cta": "Start Free Trial",
       "learnMore": "Learn More"
+    },
+    "preview": {
+      "title": "Preview All Pages",
+      "company": "Company",
+      "employee": "Employee",
+      "dashboard": "Dashboard",
+      "documents": "Documents",
+      "leave": "Leave"
     },
     "features": {
       "title": "Everything You Need to Manage Your Team",
@@ -123,7 +173,20 @@
       "haveAccount": "Already have an account?",
       "loginLink": "Sign in",
       "button": "Create Account",
-      "terms": "By signing up, you agree to our Terms of Service and Privacy Policy"
+      "terms": "By signing up, you agree to our Terms of Service and Privacy Policy",
+      "success": {
+        "redirecting": "Account created successfully! Redirecting to dashboard...",
+        "checkEmail": "Account created. Check your email to confirm the account, then sign in to complete company setup."
+      },
+      "errors": {
+        "passwordMismatch": "Passwords do not match",
+        "passwordMinLength": "Password must be at least 6 characters",
+        "createFailed": "Failed to create account"
+      }
+    },
+    "confirmation": {
+      "success": "Your account has been confirmed successfully. You can continue using the app.",
+      "linkExpired": "This confirmation link has expired. Please request a new confirmation email from the sign-in screen."
     }
   },
   "dashboard": {
@@ -140,12 +203,71 @@
       "teamMembers": "Team Members"
     }
   },
+  "employees": {
+    "title": "Employees",
+    "subtitle": "Manage your team members",
+    "add": "Add Employee",
+    "editTitle": "Edit Employee",
+    "resendInvitation": "Resend invitation",
+    "empty": {
+      "title": "No employees yet",
+      "description": "Start building your team by adding employees"
+    },
+    "form": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "position": "Position",
+      "department": "Department"
+    },
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "position": "Position",
+      "department": "Department",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "confirmDelete": "Are you sure you want to delete this employee? This action cannot be undone.",
+    "toast": {
+      "added": "Employee added and invitation sent successfully!",
+      "updated": "Employee updated successfully!",
+      "deleted": "Employee deleted successfully!",
+      "invitationSent": "Invitation sent successfully!",
+      "invitationFailed": "Employee created but invitation email failed to send.",
+      "sendFailed": "Failed to send invitation email.",
+      "addFailed": "Failed to create employee: {{error}}",
+      "updateFailed": "Failed to update employee: {{error}}",
+      "deleteFailed": "Failed to delete employee: {{error}}",
+      "authError": "Authentication error. Please sign in again.",
+      "noCompany": "Company not found. Please refresh the page.",
+      "unexpected": "An unexpected error occurred. Please try again."
+    },
+    "invitation": {
+      "title": "Employee Added",
+      "instructions": "Share this link with the employee so they can create their account:",
+      "copy": "Copy Link",
+      "copied": "Copied!",
+      "close": "Done"
+    }
+  },
   "timer": {
     "title": "Time Tracker",
-    "clockIn": "Clock In",
-    "clockOut": "Clock Out",
-    "startBreak": "Start Break",
-    "endBreak": "End Break",
+    "workTime": "Work time",
+    "pauseTime": "Break time",
+    "startWork": "START WORK",
+    "endWork": "END WORK",
+    "startPause": "START BREAK",
+    "endPause": "END BREAK",
+    "endDay": "END DAY",
+    "clockIn": "Entry",
+    "clockOut": "Exit",
+    "pauseStart": "Break start",
+    "pauseEnd": "Break end",
+    "summary": "Day summary",
+    "workedTime": "Time worked",
+    "pausedTime": "Break time",
+    "dayEnded": "Day ended. Rest well!",
+    "resetDemo": "Reset demo",
     "activeTime": "Active Time",
     "breakTime": "Break Time",
     "totalTime": "Total Time",
@@ -153,5 +275,185 @@
     "project": "Project",
     "task": "Task",
     "history": "Time History"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Manage employee documents",
+    "myTitle": "My Documents",
+    "mySubtitle": "View and download your employment documents",
+    "upload": "Upload Document",
+    "uploadModal": {
+      "title": "Upload Document",
+      "employee": "Employee",
+      "selectEmployee": "Select an employee",
+      "type": "Document type",
+      "description": "Description",
+      "descriptionPlaceholder": "Document description...",
+      "fileLabel": "File (demo)",
+      "filePlaceholder": "Click to select a file (simulated in demo)"
+    },
+    "types": {
+      "contract": "Contract",
+      "payslip": "Payslip",
+      "certificate": "Certificate",
+      "id": "ID Document",
+      "other": "Other"
+    },
+    "columns": {
+      "document": "Document",
+      "employee": "Employee",
+      "type": "Type",
+      "size": "Size",
+      "date": "Date",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "uploading": "Uploading...",
+    "filters": {
+      "searchPlaceholder": "Search documents...",
+      "allEmployees": "All employees",
+      "allTypes": "All types"
+    },
+    "empty": {
+      "title": "No documents found",
+      "description": "Adjust filters or upload a new document",
+      "noCompanyDocs": "Your company has not uploaded any documents yet",
+      "noSearchResults": "No documents match your search criteria"
+    },
+    "about": {
+      "title": "About Your Documents",
+      "description": "All documents uploaded by your company are securely stored and encrypted. You can download these documents at any time. If you have questions about any document, please contact your HR department."
+    },
+    "stats": {
+      "total": "Total documents",
+      "pendingSignature": "Pending signature",
+      "signed": "Signed"
+    },
+    "pendingSignatureSection": "Pending signature",
+    "allDocuments": "All documents",
+    "viewAndSign": "View & sign",
+    "previewTitle": "Document preview (demo)",
+    "confirmDelete": "Are you sure you want to delete this document?",
+    "status": {
+      "signed": "Signed",
+      "pending": "Pending"
+    },
+    "toast": {
+      "uploaded": "Document uploaded successfully!",
+      "deleted": "Document deleted successfully!",
+      "signed": "Document signed successfully!",
+      "uploadFailed": "Failed to upload document: {{error}}",
+      "deleteFailed": "Failed to delete document: {{error}}"
+    }
+  },
+  "leave": {
+    "title": "Leave Management",
+    "subtitle": "Manage leave types and review employee leave requests",
+    "myTitle": "My Leave Requests",
+    "mySubtitle": "Request time off and track your leave status",
+    "newRequest": "New Request",
+    "requestsTitle": "Leave Requests",
+    "types": {
+      "sectionTitle": "Leave Types",
+      "namePlaceholder": "Enter leave type name...",
+      "addModal": "Add Leave Type",
+      "editModal": "Edit Leave Type",
+      "confirmDelete": "Are you sure you want to delete this leave type?",
+      "empty": "No leave types yet"
+    },
+    "stats": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "totalApprovedDays": "Total days approved",
+      "summary": "Summary"
+    },
+    "columns": {
+      "employee": "Employee",
+      "type": "Leave Type",
+      "dates": "Dates",
+      "days": "Days",
+      "reason": "Reason",
+      "status": "Status",
+      "actions": "Actions",
+      "requested": "Requested"
+    },
+    "filters": {
+      "allStatuses": "All statuses",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "empty": {
+      "requestsTitle": "No leave requests found",
+      "requestsDescription": "Leave requests will appear here when employees submit them",
+      "myTitle": "No leave requests yet",
+      "myDescription": "Click \"New Request\" to submit your first leave request"
+    },
+    "review": {
+      "title": "Review Leave Request",
+      "employee": "Employee",
+      "type": "Leave Type",
+      "period": "Period",
+      "reason": "Reason",
+      "notes": "Review Notes (optional)",
+      "notesPlaceholder": "Add any notes about this decision...",
+      "approve": "Approve",
+      "reject": "Reject",
+      "hrNote": "HR note"
+    },
+    "request": {
+      "title": "New Leave Request",
+      "type": "Leave Type",
+      "selectType": "Select a type",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "reason": "Reason",
+      "reasonPlaceholder": "Please provide a reason for your leave request...",
+      "daysRequested": "{{count}} days requested",
+      "submit": "Submit Request"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "historyTitle": "Request History",
+    "until": "until",
+    "toast": {
+      "typeAdded": "Leave type added successfully!",
+      "typeUpdated": "Leave type updated successfully!",
+      "typeDeleted": "Leave type deleted successfully!",
+      "approved": "Leave request approved!",
+      "rejected": "Leave request rejected!",
+      "submitted": "Leave request submitted successfully!"
+    }
+  },
+  "invitation": {
+    "loading": "Loading invitation...",
+    "invalidTitle": "Invalid Invitation",
+    "goHome": "Go to Home",
+    "title": "Accept Invitation",
+    "subtitle": "Create your account to join your team",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "At least 6 characters",
+    "confirmLabel": "Confirm Password",
+    "confirmPlaceholder": "Re-enter your password",
+    "submitting": "Creating Account...",
+    "submit": "Create Account & Accept",
+    "alreadyAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "success": "Account created successfully! You can now sign in.",
+    "error": {
+      "invalidLink": "Invalid invitation link",
+      "notFound": "Invitation not found or has expired",
+      "expired": "This invitation has expired",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "createFailed": "Failed to create account: {{message}}",
+      "createAccountFailed": "Failed to create account",
+      "unexpected": "An unexpected error occurred. Please try again."
+    }
   }
 }

@@ -1,13 +1,25 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '../config/supabase';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  ReactNode,
+} from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "../config/supabase";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string, companyName?: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    companyName?: string,
+  ) => Promise<{ requiresEmailConfirmation: boolean }>;
   signInWithGoogle: () => Promise<void>;
   signInWithLinkedIn: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -19,30 +31,182 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const companySetupInFlightRef = useRef<Map<string, Promise<void>>>(new Map());
+
+  const runCompanySetupOnce = (currentUser: User) => {
+    const existingTask = companySetupInFlightRef.current.get(currentUser.id);
+    if (existingTask) {
+      return existingTask;
+    }
+
+    const task = (async () => {
+      try {
+        await ensureCompanySetup(currentUser);
+      } finally {
+        companySetupInFlightRef.current.delete(currentUser.id);
+      }
+    })();
+
+    companySetupInFlightRef.current.set(currentUser.id, task);
+    return task;
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        runCompanySetupOnce(session.user).catch((error) => {
+          console.error(
+            "Failed to complete company setup from existing session:",
+            error,
+          );
+        });
+      }
+
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
         setSession(session);
         setUser(session?.user ?? null);
+
+        if (
+          (event === "SIGNED_IN" || event === "INITIAL_SESSION") &&
+          session?.user
+        ) {
+          try {
+            await runCompanySetupOnce(session.user);
+          } catch (error) {
+            console.error(
+              "Failed to complete company setup after auth state change:",
+              error,
+            );
+          }
+        }
       })();
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+  const ensureCompanySetup = async (currentUser: User) => {
+    const companyName = currentUser.user_metadata?.company_name;
+
+    if (!companyName || typeof companyName !== "string") {
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("company_id")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (profileError) {
+      throw new Error(`Failed to fetch profile: ${profileError.message}`);
+    }
+
+    if (!profile) {
+      throw new Error("Profile creation failed. Please try logging in.");
+    }
+
+    if (profile.company_id) {
+      return;
+    }
+
+    const { data: existingCompany, error: existingCompanyError } =
+      await supabase
+        .from("companies")
+        .select("id")
+        .eq("owner_id", currentUser.id)
+        .maybeSingle();
+
+    if (existingCompanyError) {
+      throw new Error(
+        `Failed to verify company: ${existingCompanyError.message}`,
+      );
+    }
+
+    let companyId = existingCompany?.id;
+
+    if (!companyId) {
+      const { data: insertedCompany, error: companyError } = await supabase
+        .from("companies")
+        .insert({
+          name: companyName,
+          owner_id: currentUser.id,
+        })
+        .select("id")
+        .single();
+
+      if (companyError) {
+        if (companyError.code === "23505") {
+          const { data: ownerCompany, error: ownerCompanyError } =
+            await supabase
+              .from("companies")
+              .select("id")
+              .eq("owner_id", currentUser.id)
+              .maybeSingle();
+
+          if (ownerCompanyError) {
+            throw new Error(
+              `Failed to resolve duplicated company: ${ownerCompanyError.message}`,
+            );
+          }
+
+          if (ownerCompany?.id) {
+            companyId = ownerCompany.id;
+          } else {
+            throw new Error(
+              "Company name already exists. Please use a different company name.",
+            );
+          }
+        } else {
+          throw new Error(`Failed to create company: ${companyError.message}`);
+        }
+      } else {
+        companyId = insertedCompany.id;
+      }
+    }
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({
+        company_id: companyId,
+        role: "admin",
+      })
+      .eq("id", currentUser.id);
+
+    if (updateError) {
+      throw new Error(
+        `Failed to link profile to company: ${updateError.message}`,
+      );
+    }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, companyName?: string) => {
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+
+    if (data.user) {
+      await runCompanySetupOnce(data.user);
+    }
+  };
+
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    companyName?: string,
+  ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -57,71 +221,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
 
     if (!data.user) {
-      throw new Error('Failed to create user');
+      throw new Error("Failed to create user");
     }
 
     if (companyName) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      let retries = 0;
-      const maxRetries = 5;
-      let profileExists = false;
-
-      while (retries < maxRetries && !profileExists) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', data.user.id)
-          .maybeSingle();
-
-        if (profile) {
-          profileExists = true;
-        } else {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          retries++;
-        }
+      if (!data.session) {
+        return { requiresEmailConfirmation: true };
       }
 
-      if (!profileExists) {
-        throw new Error('Profile creation failed. Please try logging in.');
-      }
-
-      const { error: companyError } = await supabase
-        .from('companies')
-        .insert({
-          name: companyName,
-          owner_id: data.user.id,
-        });
-
-      if (companyError) {
-        throw new Error(`Failed to create company: ${companyError.message}`);
-      }
-
-      const { data: company } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('owner_id', data.user.id)
-        .maybeSingle();
-
-      if (company) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            company_id: company.id,
-            role: 'admin',
-          })
-          .eq('id', data.user.id);
-
-        if (updateError) {
-          throw new Error(`Failed to link profile to company: ${updateError.message}`);
-        }
-      }
+      await runCompanySetupOnce(data.user);
     }
+
+    return { requiresEmailConfirmation: !data.session };
   };
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
       },
@@ -131,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithLinkedIn = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'linkedin_oidc',
+      provider: "linkedin_oidc",
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
       },
@@ -165,7 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 }

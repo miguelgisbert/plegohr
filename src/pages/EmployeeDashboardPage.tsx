@@ -139,7 +139,7 @@ export function EmployeeDashboardPage() {
 
   const formatDisplayTime = (date: Date | null): string => {
     if (!date) return '';
-    return date.toLocaleTimeString('en-US', { hour12: false });
+    return date.toLocaleTimeString([], { hour12: false });
   };
 
   return (
@@ -153,23 +153,14 @@ export function EmployeeDashboardPage() {
                 <span className="text-xl font-bold text-gray-900 dark:text-white">PlegoHR</span>
               </Link>
               <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => navigate('/employee-dashboard')}
-                  className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400"
-                >
-                  Dashboard
+                <button onClick={() => navigate('/employee-dashboard')} className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400">
+                  {t('nav.dashboard')}
                 </button>
-                <button
-                  onClick={() => navigate('/employee-documents')}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  Documents
+                <button onClick={() => navigate('/employee-documents')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+                  {t('nav.documents')}
                 </button>
-                <button
-                  onClick={() => navigate('/employee-leave')}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  Leave
+                <button onClick={() => navigate('/employee-leave')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+                  {t('nav.leave')}
                 </button>
               </div>
             </div>
@@ -192,7 +183,8 @@ export function EmployeeDashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-            <div className="text-5xl font-bold text-gray-900 dark:text-white mb-6 font-mono">
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{t('timer.workTime')}</p>
+            <div className={`text-5xl font-bold mb-6 font-mono transition-colors ${isWorkRunning && !isPauseRunning ? 'text-teal-600 dark:text-teal-400' : 'text-gray-900 dark:text-white'}`}>
               {formatTime(workTime)}
             </div>
 
@@ -201,33 +193,34 @@ export function EmployeeDashboardPage() {
                 onClick={handleStartWork}
                 className="px-8 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold text-lg mb-6 w-full max-w-xs"
               >
-                START WORK
+                {t('timer.startWork')}
               </button>
             ) : (
               <button
                 onClick={handleEndWork}
                 className="px-8 py-3 border-2 border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors font-semibold text-lg mb-6 w-full max-w-xs"
               >
-                END WORK
+                {t('timer.endWork')}
               </button>
             )}
 
-            <div className="space-y-2 text-gray-700 dark:text-gray-300">
+            <div className="space-y-1 text-gray-600 dark:text-gray-300">
               {workStartTime && (
                 <div className="text-sm">
-                  <span className="font-medium">start time:</span> {formatDisplayTime(workStartTime)}
+                  <span className="font-medium">{t('timer.clockIn')}:</span> {formatDisplayTime(workStartTime)}
                 </div>
               )}
               {workEndTime && (
                 <div className="text-sm">
-                  <span className="font-medium">end time:</span> {formatDisplayTime(workEndTime)}
+                  <span className="font-medium">{t('timer.clockOut')}:</span> {formatDisplayTime(workEndTime)}
                 </div>
               )}
             </div>
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-            <div className="text-5xl font-bold text-gray-900 dark:text-white mb-6 font-mono">
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{t('timer.pauseTime')}</p>
+            <div className={`text-5xl font-bold mb-6 font-mono transition-colors ${isPauseRunning ? 'text-amber-500 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
               {formatTime(pauseTime)}
             </div>
 
@@ -235,28 +228,28 @@ export function EmployeeDashboardPage() {
               <button
                 onClick={handleStartPause}
                 disabled={!isWorkRunning}
-                className="px-8 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold text-lg mb-6 disabled:opacity-50 disabled:cursor-not-allowed w-full max-w-xs"
+                className="px-8 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-semibold text-lg mb-6 disabled:opacity-50 disabled:cursor-not-allowed w-full max-w-xs"
               >
-                START PAUSE
+                {t('timer.startPause')}
               </button>
             ) : (
               <button
                 onClick={handleEndPause}
-                className="px-8 py-3 border-2 border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors font-semibold text-lg mb-6 w-full max-w-xs"
+                className="px-8 py-3 border-2 border-amber-500 text-amber-500 dark:border-amber-400 dark:text-amber-400 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors font-semibold text-lg mb-6 w-full max-w-xs"
               >
-                END PAUSE
+                {t('timer.endPause')}
               </button>
             )}
 
-            <div className="space-y-2 text-gray-700 dark:text-gray-300">
+            <div className="space-y-1 text-gray-600 dark:text-gray-300">
               {pauseStartTime && (
                 <div className="text-sm">
-                  <span className="font-medium">start pause:</span> {formatDisplayTime(pauseStartTime)}
+                  <span className="font-medium">{t('timer.pauseStart')}:</span> {formatDisplayTime(pauseStartTime)}
                 </div>
               )}
               {pauseEndTime && (
                 <div className="text-sm">
-                  <span className="font-medium">end pause:</span> {formatDisplayTime(pauseEndTime)}
+                  <span className="font-medium">{t('timer.pauseEnd')}:</span> {formatDisplayTime(pauseEndTime)}
                 </div>
               )}
             </div>
@@ -264,24 +257,25 @@ export function EmployeeDashboardPage() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-          <div className="text-center space-y-3">
-            <div className="text-gray-700 dark:text-gray-300">
-              <span className="font-medium">worked time:</span>{' '}
-              <span className="font-mono font-bold">{formatTime(totalWorkedTime)}</span>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 text-center">{t('timer.summary')}</h2>
+          <div className="grid grid-cols-2 gap-6 text-center mb-8">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('timer.workedTime')}</p>
+              <p className="text-3xl font-bold font-mono text-teal-600 dark:text-teal-400">{formatTime(totalWorkedTime || workTime)}</p>
             </div>
-            <div className="text-gray-700 dark:text-gray-300">
-              <span className="font-medium">paused time:</span>{' '}
-              <span className="font-mono font-bold">{formatTime(totalPausedTime)}</span>
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('timer.pausedTime')}</p>
+              <p className="text-3xl font-bold font-mono text-amber-500 dark:text-amber-400">{formatTime(totalPausedTime || pauseTime)}</p>
             </div>
           </div>
 
-          <div className="mt-8 text-center">
+          <div className="text-center">
             <button
               onClick={handleEndDay}
               disabled={!isWorkRunning && !workStartTime}
               className="px-12 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              END DAY
+              {t('timer.endDay')}
             </button>
           </div>
         </div>

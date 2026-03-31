@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '../config/supabase';
-import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { supabase } from "../config/supabase";
+import { AlarmClockIcon } from "../components/common/AlarmClockIcon";
+import { CheckCircle, XCircle } from "lucide-react";
 
 interface InvitationData {
   id: string;
@@ -13,21 +14,24 @@ interface InvitationData {
 }
 
 export function AcceptInvitationPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get('token');
+  const token = searchParams.get("token");
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (token) {
       loadInvitation();
     } else {
-      setError('Invalid invitation link');
+      setError(t("invitation.error.invalidLink"));
       setLoading(false);
     }
   }, [token]);
@@ -35,21 +39,21 @@ export function AcceptInvitationPage() {
   const loadInvitation = async () => {
     try {
       const { data, error: invitationError } = await supabase
-        .from('employee_invitations')
-        .select('*')
-        .eq('token', token)
-        .eq('status', 'pending')
+        .from("employee_invitations")
+        .select("*")
+        .eq("token", token)
+        .eq("status", "pending")
         .maybeSingle();
 
       if (invitationError || !data) {
-        setError('Invitation not found or has expired');
+        setError(t("invitation.error.notFound"));
         setLoading(false);
         return;
       }
 
       const expiresAt = new Date(data.expires_at);
       if (expiresAt < new Date()) {
-        setError('This invitation has expired');
+        setError(t("invitation.error.expired"));
         setLoading(false);
         return;
       }
@@ -57,22 +61,23 @@ export function AcceptInvitationPage() {
       setInvitation(data);
       setLoading(false);
     } catch (err) {
-      console.error('Error loading invitation:', err);
-      setError('Failed to load invitation');
+      console.error("Error loading invitation:", err);
+      setError(t("invitation.error.notFound"));
       setLoading(false);
     }
   };
 
   const handleAcceptInvitation = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
 
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      setFormError(t("invitation.error.passwordMismatch"));
       return;
     }
 
     if (password.length < 6) {
-      alert('Password must be at least 6 characters');
+      setFormError(t("invitation.error.passwordTooShort"));
       return;
     }
 
@@ -81,49 +86,53 @@ export function AcceptInvitationPage() {
     setProcessing(true);
 
     try {
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: invitation.email,
-        password: password,
-      });
+      const { data: authData, error: signUpError } = await supabase.auth.signUp(
+        {
+          email: invitation.email,
+          password: password,
+        },
+      );
 
       if (signUpError) {
-        alert(`Failed to create account: ${signUpError.message}`);
+        setFormError(
+          t("invitation.error.createFailed", { message: signUpError.message }),
+        );
         setProcessing(false);
         return;
       }
 
       if (!authData.user) {
-        alert('Failed to create account');
+        setFormError(t("invitation.error.createAccountFailed"));
         setProcessing(false);
         return;
       }
 
       const { error: updateInvitationError } = await supabase
-        .from('employee_invitations')
+        .from("employee_invitations")
         .update({
-          status: 'accepted',
+          status: "accepted",
           accepted_at: new Date().toISOString(),
         })
-        .eq('id', invitation.id);
+        .eq("id", invitation.id);
 
       if (updateInvitationError) {
-        console.error('Error updating invitation:', updateInvitationError);
+        console.error("Error updating invitation:", updateInvitationError);
       }
 
       const { error: updateEmployeeError } = await supabase
-        .from('employees')
+        .from("employees")
         .update({ user_id: authData.user.id })
-        .eq('id', invitation.employee_id);
+        .eq("id", invitation.employee_id);
 
       if (updateEmployeeError) {
-        console.error('Error linking employee:', updateEmployeeError);
+        console.error("Error linking employee:", updateEmployeeError);
       }
 
-      alert('Account created successfully! You can now sign in.');
-      navigate('/login');
+      setSuccess(true);
+      setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
-      console.error('Unexpected error:', err);
-      alert('An unexpected error occurred. Please try again.');
+      console.error("Unexpected error:", err);
+      setFormError(t("invitation.error.unexpected"));
       setProcessing(false);
     }
   };
@@ -133,7 +142,9 @@ export function AcceptInvitationPage() {
       <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading invitation...</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t("invitation.loading")}
+          </p>
         </div>
       </div>
     );
@@ -145,15 +156,31 @@ export function AcceptInvitationPage() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
           <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Invalid Invitation
+            {t("invitation.invalidTitle")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
           >
-            Go to Home
+            {t("invitation.goHome")}
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <CheckCircle className="w-16 h-16 text-teal-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            {t("common.success")}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t("invitation.success")}
+          </p>
         </div>
       </div>
     );
@@ -165,22 +192,34 @@ export function AcceptInvitationPage() {
         <div className="text-center mb-8">
           <AlarmClockIcon className="w-16 h-16 text-teal-600 dark:text-teal-400 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Accept Invitation
+            {t("invitation.title")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Create your account to join your team
+            {t("invitation.subtitle")}
           </p>
         </div>
 
         <div className="mb-6 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Email</p>
-          <p className="font-semibold text-gray-900 dark:text-white">{invitation?.email}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            {t("invitation.emailLabel")}
+          </p>
+          <p className="font-semibold text-gray-900 dark:text-white">
+            {invitation?.email}
+          </p>
         </div>
+
+        {formError && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {formError}
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleAcceptInvitation} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Password
+              {t("invitation.passwordLabel")}
             </label>
             <input
               type="password"
@@ -189,13 +228,13 @@ export function AcceptInvitationPage() {
               required
               minLength={6}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="At least 6 characters"
+              placeholder={t("invitation.passwordPlaceholder")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Confirm Password
+              {t("invitation.confirmLabel")}
             </label>
             <input
               type="password"
@@ -204,7 +243,7 @@ export function AcceptInvitationPage() {
               required
               minLength={6}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="Re-enter your password"
+              placeholder={t("invitation.confirmPlaceholder")}
             />
           </div>
 
@@ -213,18 +252,18 @@ export function AcceptInvitationPage() {
             disabled={processing}
             className="w-full py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {processing ? 'Creating Account...' : 'Create Account & Accept'}
+            {processing ? t("invitation.submitting") : t("invitation.submit")}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?{' '}
+            {t("invitation.alreadyAccount")}{" "}
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
               className="text-teal-600 dark:text-teal-400 hover:underline font-semibold"
             >
-              Sign in
+              {t("invitation.signIn")}
             </button>
           </p>
         </div>
