@@ -10,6 +10,8 @@ import {
   Pencil,
   Trash2,
   Send,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { LanguageSwitcher } from "../components/common/LanguageSwitcher";
 import { ThemeToggle } from "../components/common/ThemeToggle";
@@ -44,6 +46,7 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const [company, setCompany] = useState<Company | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [timeStats, setTimeStats] = useState({ hoursToday: 0, hoursWeek: 0 });
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -63,26 +66,26 @@ export function DashboardPage() {
 
   const loadCompanyData = async () => {
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
+      const { data: userRecord, error: userError } = await supabase
+        .from("users")
         .select("company_id")
         .eq("id", user?.id)
         .maybeSingle();
 
-      if (profileError) {
-        console.error("Error loading profile:", profileError);
+      if (userError) {
+        console.error("Error loading user record:", userError);
         return;
       }
 
-      if (!profile?.company_id) {
-        console.log("No company_id found in profile");
+      if (!userRecord?.company_id) {
+        console.log("No company_id found in user record");
         return;
       }
 
       const { data: companyData, error: companyError } = await supabase
         .from("companies")
         .select("id, name")
-        .eq("id", profile.company_id)
+        .eq("id", userRecord.company_id)
         .maybeSingle();
 
       if (companyError) {
@@ -95,7 +98,7 @@ export function DashboardPage() {
       const { data: employeesData, error: employeesError } = await supabase
         .from("employees")
         .select("*")
-        .eq("company_id", profile.company_id)
+        .eq("company_id", userRecord.company_id)
         .order("created_at", { ascending: false });
 
       if (employeesError) {
@@ -103,6 +106,29 @@ export function DashboardPage() {
       } else {
         setEmployees(employeesData || []);
       }
+
+      const today = new Date().toISOString().split('T')[0];
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      const weekStart = startOfWeek.toISOString().split('T')[0];
+
+      const { data: todayData } = await supabase
+        .from('time_entries')
+        .select('total_seconds')
+        .eq('company_id', userRecord.company_id)
+        .eq('date', today);
+
+      const { data: weekData } = await supabase
+        .from('time_entries')
+        .select('total_seconds')
+        .eq('company_id', userRecord.company_id)
+        .gte('date', weekStart)
+        .lte('date', today);
+
+      const hoursToday = (todayData || []).reduce((sum, e) => sum + (e.total_seconds || 0), 0);
+      const hoursWeek = (weekData || []).reduce((sum, e) => sum + (e.total_seconds || 0), 0);
+
+      setTimeStats({ hoursToday, hoursWeek });
     } catch (err) {
       console.error("Unexpected error loading company data:", err);
     }
@@ -117,18 +143,22 @@ export function DashboardPage() {
     setToast({ message, type });
   };
 
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [credentials, setCredentials] = useState<{ email: string; password: string; loginUrl: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
   const sendInvitationEmail = async (employeeId: string, email: string) => {
     if (!company) {
       throw new Error("Missing company");
     }
 
-    const { error } = await supabase.functions.invoke(
+    const { data, error } = await supabase.functions.invoke(
       "send-employee-invitation",
       {
         body: {
           employeeId,
           email,
-          companyName: company.name,
+          companyId: company.id,
           appUrl: import.meta.env.VITE_APP_URL || window.location.origin,
         },
       },
@@ -137,6 +167,8 @@ export function DashboardPage() {
     if (error) {
       throw error;
     }
+
+    return data;
   };
 
   const handleInviteEmployee = async (e: React.FormEvent) => {
@@ -171,7 +203,12 @@ export function DashboardPage() {
       }
 
       try {
-        await sendInvitationEmail(employeeData.id, inviteData.email);
+        const result = await sendInvitationEmail(employeeData.id, inviteData.email);
+        if (result.credentials) {
+          setCredentials(result.credentials);
+          setShowPassword(false);
+          setShowCredentials(true);
+        }
         showToast(t("employees.toast.added"), "success");
       } catch (invitationError) {
         console.error("Error sending invitation email:", invitationError);
@@ -275,17 +312,23 @@ export function DashboardPage() {
     }
   };
 
+  const formatSeconds = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${mins}m`;
+  };
+
   const stats = [
     {
       icon: Clock,
       label: t("dashboard.stats.hoursToday"),
-      value: "0h 0m",
+      value: formatSeconds(timeStats.hoursToday),
       color: "bg-teal-100 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400",
     },
     {
       icon: BarChart3,
       label: t("dashboard.stats.hoursWeek"),
-      value: "0h 0m",
+      value: formatSeconds(timeStats.hoursWeek),
       color:
         "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400",
     },
@@ -622,6 +665,58 @@ export function DashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showCredentials && credentials && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              {t("employees.credentialsTitle")}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {t("employees.credentialsDescription")}
+            </p>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">{t("common.email")}</label>
+                <p className="text-gray-900 dark:text-white font-mono">{credentials.email}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">{t("common.password")}</label>
+                <div className="flex items-center gap-2">
+                  <p className="text-gray-900 dark:text-white font-mono flex-1">
+                    {showPassword ? credentials.password : "••••••••••••••••"}
+                  </p>
+                  <button
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(credentials.password);
+                      showToast(t("common.copied"), "success");
+                    }}
+                    className="text-sm text-teal-600 hover:text-teal-700"
+                  >
+                    {t("common.copy")}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">{t("common.loginUrl")}</label>
+                <p className="text-gray-900 dark:text-white font-mono text-sm">{credentials.loginUrl}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowCredentials(false)}
+              className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+            >
+              {t("common.close")}
+            </button>
           </div>
         </div>
       )}

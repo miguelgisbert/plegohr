@@ -10,6 +10,9 @@
     "close": "Cerrar",
     "submit": "Enviar",
     "loading": "Cargando...",
+    "loadingText": "Cargando...",
+    "passwordPlaceholder": "Mínimo 6 caracteres",
+    "confirmPlaceholder": "Confirma tu contraseña",
     "error": "Error",
     "success": "Éxito",
     "add": "Añadir",
@@ -33,6 +36,18 @@
       "approved": "Aprobado",
       "rejected": "Denegado",
       "signed": "Firmado"
+    },
+    "email": "Email",
+    "password": "Password",
+    "loginUrl": "Login URL",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "pageNotFound": "Página no encontrada",
+    "goHome": "Ir al inicio",
+    "statusColumn": "Estado",
+    "errors": {
+      "networkError": "No se puede conectar al servidor. Comprueba tu conexión a Internet e inténtalo de nuevo.",
+      "networkErrorShort": "Error de conexión"
     }
   },
   "nav": {
@@ -42,7 +57,9 @@
     "contact": "Contacto",
     "dashboard": "Panel",
     "documents": "Documentos",
-    "leave": "Vacaciones"
+    "leave": "Vacaciones",
+    "timeTracking": "Control de Tiempo",
+    "timeCorrections": "Correcciones de Tiempo"
   },
   "demo": {
     "banner": "Modo Demo — Los datos mostrados son ficticios. Ninguna acción se guarda.",
@@ -79,6 +96,7 @@
     },
     "features": {
       "title": "Todo lo que Necesitas para Gestionar tu Equipo",
+      "subtitle": "Todo lo que necesitas para gestionar tu equipo eficientemente en una plataforma",
       "timeTracking": {
         "title": "Control de Tiempo",
         "description": "Registro preciso de tiempo con controles tipo cronómetro para periodos de trabajo y descanso"
@@ -160,7 +178,43 @@
       "button": "Iniciar Sesión",
       "orContinueWith": "O continúa con",
       "google": "Continuar con Google",
-      "linkedin": "Continuar con LinkedIn"
+      "linkedin": "Continuar con LinkedIn",
+    "errors": {
+      "signInFailed": "Error al iniciar sesión. Verifica tus credenciales e inténtalo de nuevo.",
+      "googleSignInFailed": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
+      "linkedinSignInFailed": "Error al iniciar sesión con LinkedIn. Inténtalo de nuevo."
+    }
+    },
+    "forgotPassword": {
+      "title": "Olvidé mi Contraseña",
+      "subtitle": "Introduce tu correo para recibir un enlace de restablecimiento",
+      "emailPlaceholder": "tu@email.com",
+      "button": "Enviar Enlace",
+      "backToLogin": "Volver al inicio de sesión",
+      "checkEmail": "Revisa tu correo",
+      "emailSent": "Hemos enviado un enlace de restablecimiento a tu correo",
+      "linkExpires": "Este enlace caducará en 1 hora",
+      "errors": {
+        "sendFailed": "Error al enviar el correo de restablecimiento. Inténtalo de nuevo.",
+        "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo."
+      }
+    },
+    "resetPassword": {
+      "title": "Restablecer Contraseña",
+      "subtitle": "Introduce tu nueva contraseña",
+      "button": "Restablecer Contraseña",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+      "invalidLink": "Enlace Inválido o Caducado",
+      "invalidLinkMessage": "Este enlace de restablecimiento es inválido o ha caducado.",
+      "requestNewLink": "Solicitar Nuevo Enlace",
+      "success": "Contraseña Restablecida",
+      "successMessage": "Tu contraseña se ha actualizado correctamente.",
+      "redirecting": "Redirigiendo al inicio de sesión...",
+      "errors": {
+        "updateFailed": "Error al actualizar la contraseña. El enlace puede haber caducado.",
+        "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo."
+      }
     },
     "signup": {
       "title": "Crea tu Cuenta",
@@ -173,6 +227,8 @@
       "haveAccount": "¿Ya tienes cuenta?",
       "loginLink": "Inicia sesión",
       "button": "Crear Cuenta",
+      "passwordPlaceholder": "Al menos 6 caracteres",
+      "confirmPlaceholder": "Confirma tu contraseña",
       "terms": "Al registrarte, aceptas nuestros Términos de Servicio y Política de Privacidad",
       "success": {
         "redirecting": "¡Cuenta creada correctamente! Redirigiendo al panel...",
@@ -187,6 +243,16 @@
     "confirmation": {
       "success": "Tu cuenta se ha confirmado correctamente. Ya puedes continuar usando la aplicación.",
       "linkExpired": "Este enlace de confirmación ha caducado. Solicita un nuevo correo de confirmación desde la pantalla de inicio de sesión."
+    },
+    "errors": {
+      "fetchProfile": "Error al cargar el perfil. Recarga la página.",
+      "profileCreationFailed": "Error al crear el perfil. Intenta iniciar sesión de nuevo.",
+      "companyExists": "Este nombre de empresa ya existe. Usa un nombre diferente.",
+      "verifyCompany": "Error al verificar la información de la empresa.",
+      "resolveCompany": "Error al resolver la empresa. Inténtalo de nuevo.",
+      "createCompany": "Error al crear la empresa. Inténtalo de nuevo.",
+      "linkProfile": "Error al vincular el perfil con la empresa. Inténtalo de nuevo.",
+      "createUser": "Error al crear la cuenta de usuario. Inténtalo de nuevo."
     }
   },
   "dashboard": {
@@ -248,7 +314,72 @@
       "copy": "Copiar Enlace",
       "copied": "¡Copiado!",
       "close": "Hecho"
+    },
+    "credentialsTitle": "Credenciales del empleado",
+    "credentialsDescription": "Comparte estas credenciales con el empleado para que pueda acceder al sistema.",
+    "statusCorrected": "Corregido"
+  },
+  "timeTracking": {
+    "title": "Control de Tiempo",
+    "subtitle": "Ver todas las entradas de tiempo de los empleados",
+    "stats": {
+      "totalEmployees": "Total Empleados Hoy",
+      "clockedIn": "Actualmente Fichados",
+      "totalHours": "Total Horas Hoy"
+    },
+    "filters": {
+      "date": "Fecha",
+      "employee": "Empleado",
+      "allEmployees": "Todos los Empleados"
+    },
+    "table": {
+      "employee": "Empleado",
+      "clockIn": "Entrada",
+      "clockOut": "Salida",
+      "breakStart": "Inicio Descanso",
+      "breakEnd": "Fin Descanso",
+      "totalWork": "Tiempo Trabajado",
+      "totalBreak": "Tiempo Descanso",
+      "status": "Estado"
+    },
+    "correctionPending": "Corrección Pendiente",
+    "downloadPdf": "Descargar PDF",
+    "empty": "No se encontraron entradas de tiempo para esta fecha",
+    "status": {
+      "active": "Activo",
+      "completed": "Completado",
+      "corrected": "Corregido"
     }
+  },
+  "corrections": {
+    "title": "Correcciones de Tiempo",
+    "subtitle": "Revisar y gestionar las solicitudes de corrección horaria",
+    "tabs": {
+      "pending": "Pendientes",
+      "approved": "Aprobadas",
+      "rejected": "Denegadas"
+    },
+    "table": {
+      "employee": "Empleado",
+      "date": "Fecha",
+      "reason": "Motivo",
+      "newClockIn": "Nueva Entrada",
+      "newClockOut": "Nueva Salida",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "review": {
+      "title": "Revisar Corrección Horaria",
+      "oldValues": "Valores Originales",
+      "newValues": "Valores Solicitados",
+      "clockIn": "Entrada",
+      "clockOut": "Salida",
+      "breakStart": "Inicio Descanso",
+      "breakEnd": "Fin Descanso",
+      "notes": "Notas de revisión (opcional)",
+      "notesPlaceholder": "Añade notas sobre esta decisión..."
+    },
+    "empty": "No se encontraron solicitudes de corrección"
   },
   "timer": {
     "title": "Registro de Tiempo",
@@ -274,7 +405,17 @@
     "addNote": "Añadir Nota",
     "project": "Proyecto",
     "task": "Tarea",
-    "history": "Historial de Tiempo"
+    "history": "Historial de Tiempo",
+    "clockedIn": "Fichado entrada",
+    "clockedOut": "Fichado salida",
+    "breakStarted": "Descanso iniciado",
+    "breakEnded": "Descanso finalizado",
+    "correctionRequested": "Solicitud de corrección enviada",
+    "correctionTitle": "Solicitar corrección horaria",
+    "correctionReason": "Motivo de la corrección",
+    "todayHistory": "Entradas de hoy",
+    "noEntriesToday": "No hay entradas para hoy",
+    "requestCorrection": "Solicitar Corrección"
   },
   "documents": {
     "title": "Documentos",
@@ -321,8 +462,8 @@
       "noSearchResults": "Ningún documento coincide con los criterios de búsqueda"
     },
     "about": {
-      "title": "Sobre tus documentos",
-      "description": "Todos los documentos subidos por tu empresa están almacenados de forma segura y cifrada. Puedes descargar estos documentos en cualquier momento. Si tienes preguntas sobre algún documento, contacta con tu departamento de RRHH."
+      "title": "Acerca de tus Documentos",
+      "description": "Todos los documentos subidos por tu empresa se almacenan y cifran de forma segura. Puedes descargar estos documentos en cualquier momento. Si tienes preguntas sobre algún documento, ponte en contacto con tu departamento de RRHH."
     },
     "stats": {
       "total": "Total documentos",
@@ -344,6 +485,11 @@
       "signed": "¡Documento firmado correctamente!",
       "uploadFailed": "Error al subir el documento: {{error}}",
       "deleteFailed": "Error al eliminar el documento: {{error}}"
+    },
+    "errors": {
+      "downloadFailed": "Error al descargar el documento. Inténtalo de nuevo.",
+      "invalidFileType": "Este tipo de archivo no está permitido. Sube archivos PDF, JPG o PNG.",
+      "fileTooLarge": "El tamaño del archivo supera el máximo permitido."
     }
   },
   "leave": {

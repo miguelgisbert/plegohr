@@ -111,7 +111,7 @@ export function formatFileSize(bytes: number): string {
 
 export async function prepareFileForUpload(file: File): Promise<File> {
   if (!isAllowedFileType(file)) {
-    throw new Error(`File type ${file.type} is not allowed. Please upload PDF, JPG, or PNG files.`);
+    throw new Error('INVALID_FILE_TYPE');
   }
 
   let processedFile = file;
@@ -121,11 +121,7 @@ export async function prepareFileForUpload(file: File): Promise<File> {
   }
 
   if (!validateFileSize(processedFile)) {
-    throw new Error(
-      `File size ${formatFileSize(processedFile.size)} exceeds maximum allowed size of ${formatFileSize(
-        MAX_FILE_SIZES[processedFile.type as keyof typeof MAX_FILE_SIZES] || 10 * 1024 * 1024
-      )}`
-    );
+    throw new Error('FILE_TOO_LARGE');
   }
 
   return processedFile;

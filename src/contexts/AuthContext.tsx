@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useRef,
   useState,
   ReactNode,
 } from "react";
@@ -39,9 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserProfile = async (userId: string) => {
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role, company_id')
+      const { data: userRecord, error } = await supabase
+        .from('users')
+        .select('type, company_id')
         .eq('id', userId)
         .maybeSingle();
 
@@ -52,9 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (profile) {
-        setRole(profile.role as 'admin' | 'employee');
-        setCompanyId(profile.company_id);
+      if (userRecord) {
+        setRole(userRecord.type === 'company' ? 'admin' : 'employee');
+        setCompanyId(userRecord.company_id);
       } else {
         setRole(null);
         setCompanyId(null);
@@ -78,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       (async () => {
         setSession(session);
         setUser(session?.user ?? null);
@@ -101,21 +100,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("company_id")
+    const { data: userRecord, error: profileError } = await supabase
+      .from("users")
+      .select("company_id, type")
       .eq("id", currentUser.id)
       .maybeSingle();
 
     if (profileError) {
-      throw new Error(`Failed to fetch profile: ${profileError.message}`);
+      throw new Error(`Failed to fetch user record: ${profileError.message}`);
     }
 
-    if (!profile) {
-      throw new Error("Profile creation failed. Please try logging in.");
+    if (!userRecord) {
+      const { error: rpcError } = await supabase.rpc('create_user_profile', {
+        user_id: currentUser.id,
+        user_full_name: currentUser.user_metadata?.full_name || 'User',
+      });
+      if (rpcError) {
+        throw new Error(
+          `Failed to create user record: ${rpcError.message}. Please try logging in.`,
+        );
+      }
     }
 
-    if (profile.company_id) {
+    // Refetch after potential RPC creation
+    const { data: freshUser, error: refetchError } = await supabase
+      .from("users")
+      .select("company_id, type")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (refetchError || !freshUser) {
+      throw new Error("User record creation failed. Please try logging in.");
+    }
+
+    if (freshUser.company_id || freshUser.type === "employee") {
       return;
     }
 
@@ -175,18 +193,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { error: updateError } = await supabase
-      .from("profiles")
+      .from("users")
       .update({
         company_id: companyId,
-        role: "admin",
+        type: "company",
       })
       .eq("id", currentUser.id);
 
     if (updateError) {
       throw new Error(
-        `Failed to link profile to company: ${updateError.message}`,
+        `Failed to link user to company: ${updateError.message}`,
       );
     }
+
+    await loadUserProfile(currentUser.id);
   };
 
   const signIn = async (email: string, password: string) => {
@@ -197,7 +217,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
 
     if (data.user) {
-      await runCompanySetupOnce(data.user);
+      await ensureCompanySetup(data.user);
     }
   };
 
@@ -227,66 +247,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Failed to create user");
     }
 
-    if (companyName) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      let retries = 0;
-      const maxRetries = 5;
-      let profileExists = false;
-
-      while (retries < maxRetries && !profileExists) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', data.user.id)
-          .maybeSingle();
-
-        if (profile) {
-          profileExists = true;
-          console.log('Profile found:', profile);
-        } else {
-          console.log(`Profile not found, retry ${retries + 1}/${maxRetries}`);
-          await new Promise(resolve => setTimeout(resolve, 500));
-          retries++;
-        }
+    if (data.session && companyName) {
+      // Ensure user record exists in public.users (trigger fallback)
+      const { error: rpcError } = await supabase.rpc('create_user_profile', {
+        user_id: data.user.id,
+        user_full_name: fullName,
+      });
+      if (rpcError) {
+        console.error('Failed to create user record via RPC:', rpcError);
       }
 
-      if (!profileExists) {
-        console.error('Profile creation failed after retries');
-        throw new Error('Profile creation failed. Please try logging in.');
-      }
-
-      const { error: companyError } = await supabase
-        .from('companies')
-        .insert({
-          name: companyName,
-          owner_id: data.user.id,
-        });
-
-      if (companyError) {
-        console.error('Company creation error:', companyError);
-        throw new Error(`Failed to create company: ${companyError.message}`);
-      }
-
-      const { data: company } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('owner_id', data.user.id)
-        .maybeSingle();
-
-      if (company) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            company_id: company.id,
-            role: 'admin',
-          })
-          .eq('id', data.user.id);
-
-        if (updateError) {
-          throw new Error(`Failed to link profile to company: ${updateError.message}`);
-        }
-      }
+      await ensureCompanySetup(data.user);
     }
 
     return { requiresEmailConfirmation: !data.session };

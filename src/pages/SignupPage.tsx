@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
 import { AlarmClockIcon } from "../components/common/AlarmClockIcon";
 import { Navigation } from "../components/landing/Navigation";
+import { Eye, EyeOff } from "lucide-react";
+import { getErrorMessage } from "../utils/errorUtils";
 
 export function SignupPage() {
   const { t } = useTranslation();
@@ -19,10 +21,32 @@ export function SignupPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError("");
+        setSuccess("");
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  useEffect(() => {
+    if (success) {
+      if (role === 'admin') {
+        navigate('/dashboard');
+      } else if (role === 'employee') {
+        navigate('/employee-dashboard');
+      }
+    }
+  }, [role, success, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,21 +66,11 @@ export function SignupPage() {
     setLoading(true);
 
     try {
-      await signUp(formData.email, formData.password, formData.fullName, formData.companyName);
-      setSuccess('Account created successfully! Redirecting to dashboard...');
-      // Wait for role to be loaded and then redirect
-      setTimeout(() => {
-        if (role === 'admin') {
-          navigate('/dashboard');
-        } else if (role === 'employee') {
-          navigate('/employee-dashboard');
-        }
-        // If role is null, stay on signup (will be caught by ProtectedRoute)
-      }, 500);
+      const result = await signUp(formData.email, formData.password, formData.fullName, formData.companyName);
+      setSuccess(result.requiresEmailConfirmation ? t('auth.signup.success.checkEmail') : t('auth.signup.success.redirecting'));
+      setLoading(false);
     } catch (err: any) {
-      console.error('Sign up error:', err);
-      const errorMessage = err.message || 'Failed to create account';
-      setError(errorMessage);
+      setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.signup.errors.createFailed'));
       setLoading(false);
     }
   };
@@ -65,7 +79,7 @@ export function SignupPage() {
     try {
       await signInWithGoogle();
     } catch (err: any) {
-      setError(err.message || "Failed to sign in with Google");
+      setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.login.errors.googleSignInFailed'));
     }
   };
 
@@ -73,7 +87,7 @@ export function SignupPage() {
     try {
       await signInWithLinkedIn();
     } catch (err: any) {
-      setError(err.message || "Failed to sign in with LinkedIn");
+      setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.login.errors.linkedinSignInFailed'));
     }
   };
 
@@ -154,28 +168,46 @@ export function SignupPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t("auth.signup.password")}
                 </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t("auth.signup.confirmPassword")}
                 </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -225,7 +257,7 @@ export function SignupPage() {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  <span className="text-sm font-medium">Google</span>
+                  <span className="text-sm font-medium">{t('auth.login.google')}</span>
                 </button>
 
                 <button
@@ -239,7 +271,7 @@ export function SignupPage() {
                   >
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                   </svg>
-                  <span className="text-sm font-medium">LinkedIn</span>
+                  <span className="text-sm font-medium">{t('auth.login.linkedin')}</span>
                 </button>
               </div>
             </div>

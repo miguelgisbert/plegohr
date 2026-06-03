@@ -191,19 +191,19 @@ export function EmployeeLeavePage() {
                   onClick={() => navigate('/employee-dashboard')}
                   className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                 >
-                  Dashboard
+                  {t('nav.dashboard')}
                 </button>
                 <button
                   onClick={() => navigate('/employee-documents')}
                   className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                 >
-                  Documents
+                  {t('nav.documents')}
                 </button>
                 <button
                   onClick={() => navigate('/employee-leave')}
                   className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400"
                 >
-                  Leave
+                  {t('nav.leave')}
                 </button>
               </div>
             </div>
@@ -227,10 +227,10 @@ export function EmployeeLeavePage() {
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
           <div>
             <Typography variant="h3" fontWeight="bold" gutterBottom>
-              My Leave Requests
+              {t('leave.myTitle')}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Request time off and track your leave status
+              {t('leave.mySubtitle')}
             </Typography>
           </div>
           <Button
@@ -239,7 +239,7 @@ export function EmployeeLeavePage() {
             onClick={() => setShowRequestModal(true)}
             size="large"
           >
-            New Request
+            {t('leave.newRequest')}
           </Button>
         </Box>
 
@@ -251,7 +251,7 @@ export function EmployeeLeavePage() {
                   {leaveRequests.filter((r) => r.status === 'pending').length}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Pending Requests
+                  {t('leave.stats.pending')}
                 </Typography>
               </CardContent>
             </Card>
@@ -263,7 +263,7 @@ export function EmployeeLeavePage() {
                   {leaveRequests.filter((r) => r.status === 'approved').length}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Approved Requests
+                  {t('leave.stats.approved')}
                 </Typography>
               </CardContent>
             </Card>
@@ -277,7 +277,7 @@ export function EmployeeLeavePage() {
                     .reduce((total, r) => total + calculateDays(r.start_date, r.end_date), 0)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Total Days Approved
+                  {t('leave.stats.totalApprovedDays')}
                 </Typography>
               </CardContent>
             </Card>
@@ -287,7 +287,7 @@ export function EmployeeLeavePage() {
         <Card>
           <Box p={3} borderBottom={1} borderColor="divider">
             <Typography variant="h5" fontWeight="bold">
-              Leave History
+              {t('leave.historyTitle')}
             </Typography>
           </Box>
 
@@ -295,10 +295,10 @@ export function EmployeeLeavePage() {
             <Box p={6} textAlign="center">
               <CalendarIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <Typography variant="h6" gutterBottom>
-                No leave requests yet
+                {t('leave.empty.myTitle')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Click "New Request" to submit your first leave request
+                {t('leave.empty.myDescription')}
               </Typography>
             </Box>
           ) : (
@@ -306,12 +306,12 @@ export function EmployeeLeavePage() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Leave Type</TableCell>
-                    <TableCell>Period</TableCell>
-                    <TableCell>Days</TableCell>
-                    <TableCell>Reason</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Requested</TableCell>
+                    <TableCell>{t('leave.columns.type')}</TableCell>
+                    <TableCell>{t('leave.columns.dates')}</TableCell>
+                    <TableCell>{t('leave.columns.days')}</TableCell>
+                    <TableCell>{t('leave.columns.reason')}</TableCell>
+                    <TableCell>{t('leave.columns.status')}</TableCell>
+                    <TableCell>{t('leave.columns.requested')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -325,7 +325,7 @@ export function EmployeeLeavePage() {
                           {new Date(request.start_date).toLocaleDateString()}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          to {new Date(request.end_date).toLocaleDateString()}
+                          {t('leave.until')} {new Date(request.end_date).toLocaleDateString()}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -340,7 +340,7 @@ export function EmployeeLeavePage() {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={request.status}
+                          label={t(`leave.status.${request.status}`)}
                           color={getStatusColor(request.status) as any}
                           size="small"
                         />
@@ -374,7 +374,7 @@ export function EmployeeLeavePage() {
           <DialogTitle>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6" fontWeight="bold">
-                New Leave Request
+                {t('leave.request.title')}
               </Typography>
               <IconButton onClick={() => setShowRequestModal(false)} size="small">
                 <CloseIcon />
@@ -386,7 +386,7 @@ export function EmployeeLeavePage() {
               <Box display="flex" flexDirection="column" gap={3}>
                 <TextField
                   select
-                  label="Leave Type"
+                  label={t('leave.request.type')}
                   value={requestForm.leave_type_id}
                   onChange={(e) => setRequestForm({ ...requestForm, leave_type_id: e.target.value })}
                   required
@@ -400,7 +400,7 @@ export function EmployeeLeavePage() {
                 </TextField>
 
                 <DatePicker
-                  label="Start Date"
+                  label={t('leave.request.startDate')}
                   value={requestForm.start_date}
                   onChange={(newValue) => setRequestForm({ ...requestForm, start_date: newValue })}
                   slotProps={{
@@ -412,7 +412,7 @@ export function EmployeeLeavePage() {
                 />
 
                 <DatePicker
-                  label="End Date"
+                  label={t('leave.request.endDate')}
                   value={requestForm.end_date}
                   onChange={(newValue) => setRequestForm({ ...requestForm, end_date: newValue })}
                   minDate={requestForm.start_date || undefined}
@@ -425,21 +425,21 @@ export function EmployeeLeavePage() {
                 />
 
                 <TextField
-                  label="Reason"
+                  label={t('leave.request.reason')}
                   multiline
                   rows={4}
                   value={requestForm.reason}
                   onChange={(e) => setRequestForm({ ...requestForm, reason: e.target.value })}
-                  placeholder="Please provide a reason for your leave request..."
+                  placeholder={t('leave.request.reasonPlaceholder')}
                   required
                   fullWidth
                 />
               </Box>
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 2 }}>
-              <Button onClick={() => setShowRequestModal(false)}>Cancel</Button>
+              <Button onClick={() => setShowRequestModal(false)}>{t('common.cancel')}</Button>
               <Button type="submit" variant="contained" size="large">
-                Submit Request
+                {t('leave.request.submit')}
               </Button>
             </DialogActions>
           </form>

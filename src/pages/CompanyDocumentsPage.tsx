@@ -7,6 +7,7 @@ import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
 import { useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
+import { isNetworkError } from '../utils/errorUtils';
 
 interface Employee {
   id: string;
@@ -51,18 +52,18 @@ export function CompanyDocumentsPage() {
   }, []);
 
   const loadEmployees = async () => {
-    const { data: profile } = await supabase
-      .from('profiles')
+    const { data: userRecord } = await supabase
+      .from('users')
       .select('company_id')
       .eq('id', user?.id)
       .maybeSingle();
 
-    if (!profile?.company_id) return;
+    if (!userRecord?.company_id) return;
 
     const { data, error } = await supabase
       .from('employees')
       .select('id, full_name, email, position')
-      .eq('company_id', profile.company_id)
+      .eq('company_id', userRecord.company_id)
       .order('full_name');
 
     if (!error && data) {
@@ -71,13 +72,13 @@ export function CompanyDocumentsPage() {
   };
 
   const loadDocuments = async () => {
-    const { data: profile } = await supabase
-      .from('profiles')
+    const { data: userRecord } = await supabase
+      .from('users')
       .select('company_id')
       .eq('id', user?.id)
       .maybeSingle();
 
-    if (!profile?.company_id) return;
+    if (!userRecord?.company_id) return;
 
     const { data, error } = await supabase
       .from('documents')
@@ -85,7 +86,7 @@ export function CompanyDocumentsPage() {
         *,
         employee:employees(id, full_name, email, position)
       `)
-      .eq('company_id', profile.company_id)
+      .eq('company_id', userRecord.company_id)
       .order('uploaded_at', { ascending: false });
 
     if (!error && data) {
@@ -106,19 +107,19 @@ export function CompanyDocumentsPage() {
     setIsUploading(true);
 
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: userRecord } = await supabase
+        .from('users')
         .select('company_id')
         .eq('id', user?.id)
         .maybeSingle();
 
-      if (!profile?.company_id) {
+      if (!userRecord?.company_id) {
         alert(t('employees.toast.noCompany'));
         return;
       }
 
       const fileExt = uploadForm.file.name.split('.').pop();
-      const fileName = `${profile.company_id}/${uploadForm.employee_id}/${Date.now()}.${fileExt}`;
+      const fileName = `${userRecord.company_id}/${uploadForm.employee_id}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
@@ -129,7 +130,7 @@ export function CompanyDocumentsPage() {
       const { error: insertError } = await supabase
         .from('documents')
         .insert({
-          company_id: profile.company_id,
+          company_id: userRecord.company_id,
           employee_id: uploadForm.employee_id,
           file_name: uploadForm.file.name,
           file_path: fileName,
@@ -155,7 +156,11 @@ export function CompanyDocumentsPage() {
       loadDocuments();
     } catch (error) {
       console.error('Upload error:', error);
-      alert(t('documents.toast.uploadFailed', { error: String(error) }));
+      if (isNetworkError(error)) {
+        alert(t('common.errors.networkError'));
+      } else {
+        alert(t('documents.toast.uploadFailed', { error: String(error) }));
+      }
     } finally {
       setIsUploading(false);
     }
@@ -181,7 +186,11 @@ export function CompanyDocumentsPage() {
       loadDocuments();
     } catch (error) {
       console.error('Delete error:', error);
-      alert(t('documents.toast.deleteFailed', { error: String(error) }));
+      if (isNetworkError(error)) {
+        alert(t('common.errors.networkError'));
+      } else {
+        alert(t('documents.toast.deleteFailed', { error: String(error) }));
+      }
     }
   };
 

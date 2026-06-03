@@ -70,7 +70,7 @@ export function EmployeeDocumentsPage() {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Download error:', error);
-      alert('Error downloading document');
+      alert(t('documents.errors.downloadFailed'));
     }
   };
 
@@ -110,19 +110,19 @@ export function EmployeeDocumentsPage() {
                   onClick={() => navigate('/employee-dashboard')}
                   className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                 >
-                  Dashboard
+                  {t('nav.dashboard')}
                 </button>
                 <button
                   onClick={() => navigate('/employee-documents')}
                   className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400"
                 >
-                  Documents
+                  {t('nav.documents')}
                 </button>
                 <button
                   onClick={() => navigate('/employee-leave')}
                   className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                 >
-                  Leave
+                  {t('nav.leave')}
                 </button>
               </div>
             </div>
@@ -145,23 +145,23 @@ export function EmployeeDocumentsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            My Documents
+            {t('documents.myTitle')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            View and download your employment documents
+            {t('documents.mySubtitle')}
           </p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Documents</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('documents.title')}</h2>
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search documents..."
+                    placeholder={t('documents.filters.searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
@@ -174,10 +174,10 @@ export function EmployeeDocumentsPage() {
                     onChange={(e) => setFilterType(e.target.value)}
                     className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white appearance-none"
                   >
-                    <option value="">All Types</option>
+                    <option value="">{t('documents.filters.allTypes')}</option>
                     {documentTypes.map((type) => (
                       <option key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                        {t(`documents.types.${type}`)}
                       </option>
                     ))}
                   </select>
@@ -190,12 +190,12 @@ export function EmployeeDocumentsPage() {
             <div className="p-12 text-center">
               <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                No documents found
+                {t('documents.empty.title')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
                 {documents.length === 0
-                  ? 'Your company has not uploaded any documents yet'
-                  : 'No documents match your search criteria'}
+                  ? t('documents.empty.noCompanyDocs')
+                  : t('documents.empty.noSearchResults')}
               </p>
             </div>
           ) : (
@@ -204,19 +204,19 @@ export function EmployeeDocumentsPage() {
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Document Name
+                      {t('documents.columns.document')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Type
+                      {t('documents.columns.type')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Size
+                      {t('documents.columns.size')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Uploaded
+                      {t('documents.columns.date')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Actions
+                      {t('documents.columns.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -242,7 +242,7 @@ export function EmployeeDocumentsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400">
-                          {doc.document_type}
+                          {t(`documents.types.${doc.document_type}`)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
@@ -257,7 +257,7 @@ export function EmployeeDocumentsPage() {
                           className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
                         >
                           <Download className="w-4 h-4" />
-                          Download
+                          {t('common.download')}
                         </button>
                       </td>
                     </tr>
@@ -273,12 +273,10 @@ export function EmployeeDocumentsPage() {
             <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
             <div>
               <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">
-                About Your Documents
+                {t('documents.about.title')}
               </h3>
               <p className="text-sm text-blue-800 dark:text-blue-400">
-                All documents uploaded by your company are securely stored and encrypted. You can download
-                these documents at any time. If you have questions about any document, please contact your
-                HR department.
+                {t('documents.about.description')}
               </p>
             </div>
           </div>

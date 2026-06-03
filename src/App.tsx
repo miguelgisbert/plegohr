@@ -14,12 +14,15 @@ import { CompanyDocumentsPage } from './pages/CompanyDocumentsPage';
 import { EmployeeDocumentsPage } from './pages/EmployeeDocumentsPage';
 import { CompanyLeavePage } from './pages/CompanyLeavePage';
 import { EmployeeLeavePage } from './pages/EmployeeLeavePage';
+import { AdminTimeTrackingPage } from './pages/AdminTimeTrackingPage';
+import { AdminCorrectionsPage } from './pages/AdminCorrectionsPage';
 import { PreviewCompanyDashboardPage } from './pages/PreviewCompanyDashboardPage';
 import { PreviewEmployeeDashboardPage } from './pages/PreviewEmployeeDashboardPage';
 import { PreviewCompanyDocumentsPage } from './pages/PreviewCompanyDocumentsPage';
 import { PreviewEmployeeDocumentsPage } from './pages/PreviewEmployeeDocumentsPage';
 import { PreviewCompanyLeavePage } from './pages/PreviewCompanyLeavePage';
 import { PreviewEmployeeLeavePage } from './pages/PreviewEmployeeLeavePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
   return (
@@ -44,12 +47,15 @@ function App() {
             <Route path="/preview/employee-leave" element={<PreviewEmployeeLeavePage />} />
 
             {/* Protected routes (auth required) */}
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/employee-dashboard" element={<ProtectedRoute><EmployeeDashboardPage /></ProtectedRoute>} />
-            <Route path="/documents" element={<ProtectedRoute><CompanyDocumentsPage /></ProtectedRoute>} />
-            <Route path="/employee-documents" element={<ProtectedRoute><EmployeeDocumentsPage /></ProtectedRoute>} />
-            <Route path="/leave" element={<ProtectedRoute><CompanyLeavePage /></ProtectedRoute>} />
-            <Route path="/employee-leave" element={<ProtectedRoute><EmployeeLeavePage /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute requiredRole="admin"><DashboardPage /></ProtectedRoute>} />
+            <Route path="/employee-dashboard" element={<ProtectedRoute requiredRole="employee"><EmployeeDashboardPage /></ProtectedRoute>} />
+            <Route path="/documents" element={<ProtectedRoute requiredRole="admin"><CompanyDocumentsPage /></ProtectedRoute>} />
+            <Route path="/employee-documents" element={<ProtectedRoute requiredRole="employee"><EmployeeDocumentsPage /></ProtectedRoute>} />
+            <Route path="/leave" element={<ProtectedRoute requiredRole="admin"><CompanyLeavePage /></ProtectedRoute>} />
+            <Route path="/employee-leave" element={<ProtectedRoute requiredRole="employee"><EmployeeLeavePage /></ProtectedRoute>} />
+            <Route path="/time-tracking" element={<ProtectedRoute requiredRole="admin"><AdminTimeTrackingPage /></ProtectedRoute>} />
+            <Route path="/time-corrections" element={<ProtectedRoute requiredRole="admin"><AdminCorrectionsPage /></ProtectedRoute>} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </AuthProvider>
       </ThemeProvider>

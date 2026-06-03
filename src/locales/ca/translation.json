@@ -10,6 +10,9 @@
     "close": "Tancar",
     "submit": "Enviar",
     "loading": "Carregant...",
+    "loadingText": "Carregant...",
+    "passwordPlaceholder": "Mínim 6 caràcters",
+    "confirmPlaceholder": "Confirma la teva contrasenya",
     "error": "Error",
     "success": "Èxit",
     "add": "Afegir",
@@ -33,6 +36,18 @@
       "approved": "Aprovat",
       "rejected": "Denegat",
       "signed": "Signat"
+    },
+    "email": "Email",
+    "password": "Password",
+    "loginUrl": "Login URL",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "pageNotFound": "Página no trobada",
+    "goHome": "Anar a l'inici",
+    "statusColumn": "Estat",
+    "errors": {
+      "networkError": "No es pot connectar al servidor. Comprova la teva connexió a Internet i torna-ho a intentar.",
+      "networkErrorShort": "Error de connexió"
     }
   },
   "nav": {
@@ -42,7 +57,9 @@
     "contact": "Contacte",
     "dashboard": "Tauler",
     "documents": "Documents",
-    "leave": "Vacances"
+    "leave": "Vacances",
+    "timeTracking": "Control de Temps",
+    "timeCorrections": "Correccions de Temps"
   },
   "demo": {
     "banner": "Mode Demo — Les dades mostrades són fictícies. Cap acció es guarda.",
@@ -79,6 +96,7 @@
     },
     "features": {
       "title": "Tot el que Necessites per Gestionar el teu Equip",
+      "subtitle": "Tot el que necessites per gestionar el teu equip eficientment en una plataforma",
       "timeTracking": {
         "title": "Control de Temps",
         "description": "Registre precís de temps amb controls tipus cronòmetre per períodes de treball i descans"
@@ -160,7 +178,43 @@
       "button": "Iniciar Sessió",
       "orContinueWith": "O continua amb",
       "google": "Continuar amb Google",
-      "linkedin": "Continuar amb LinkedIn"
+      "linkedin": "Continuar amb LinkedIn",
+    "errors": {
+      "signInFailed": "Error en iniciar sessió. Verifica les teves credencials i torna-ho a intentar.",
+      "googleSignInFailed": "Error en iniciar sessió amb Google. Torna-ho a intentar.",
+      "linkedinSignInFailed": "Error en iniciar sessió amb LinkedIn. Torna-ho a intentar."
+    }
+    },
+    "forgotPassword": {
+      "title": "He oblidat la Contrasenya",
+      "subtitle": "Introdueix el teu correu per rebre un enllaç de restabliment",
+      "emailPlaceholder": "teu@email.com",
+      "button": "Enviar Enllaç",
+      "backToLogin": "Tornar a l'inici de sessió",
+      "checkEmail": "Revisa el teu correu",
+      "emailSent": "Hem enviat un enllaç de restabliment al teu correu",
+      "linkExpires": "Aquest enllaç caducarà en 1 hora",
+      "errors": {
+        "sendFailed": "Error en enviar el correu de restabliment. Torna-ho a intentar.",
+        "unexpected": "S'ha produït un error inesperat. Torna-ho a intentar."
+      }
+    },
+    "resetPassword": {
+      "title": "Restablir Contrasenya",
+      "subtitle": "Introdueix la teva nova contrasenya",
+      "button": "Restablir Contrasenya",
+      "passwordMismatch": "Les contrasenyes no coincideixen",
+      "passwordTooShort": "La contrasenya ha de tenir almenys 6 caràcters",
+      "invalidLink": "Enllaç Invàlid o Caducat",
+      "invalidLinkMessage": "Aquest enllaç de restabliment és invàlid o ha caducat.",
+      "requestNewLink": "Sol·licitar Nou Enllaç",
+      "success": "Contrasenya Restablida",
+      "successMessage": "La teva contrasenya s'ha actualitzat correctament.",
+      "redirecting": "Redirigint a l'inici de sessió...",
+      "errors": {
+        "updateFailed": "Error en actualitzar la contrasenya. L'enllaç pot haver caducat.",
+        "unexpected": "S'ha produït un error inesperat. Torna-ho a intentar."
+      }
     },
     "signup": {
       "title": "Crea el teu Compte",
@@ -173,6 +227,8 @@
       "haveAccount": "Ja tens compte?",
       "loginLink": "Inicia sessió",
       "button": "Crear Compte",
+      "passwordPlaceholder": "Almenys 6 caràcters",
+      "confirmPlaceholder": "Confirma la teva contrasenya",
       "terms": "En registrar-te, acceptes els nostres Termes de Servei i Política de Privacitat",
       "success": {
         "redirecting": "Compte creat correctament! Redirigint al tauler...",
@@ -187,6 +243,16 @@
     "confirmation": {
       "success": "El teu compte s'ha confirmat correctament. Ja pots continuar utilitzant l'aplicació.",
       "linkExpired": "Aquest enllaç de confirmació ha caducat. Demana un nou correu de confirmació des de la pantalla d'inici de sessió."
+    },
+    "errors": {
+      "fetchProfile": "Error en carregar el perfil. Recarrega la pàgina.",
+      "profileCreationFailed": "Error en crear el perfil. Torna a iniciar sessió.",
+      "companyExists": "Aquest nom d'empresa ja existeix. Usa un nom diferent.",
+      "verifyCompany": "Error en verificar la informació de l'empresa.",
+      "resolveCompany": "Error en resoldre l'empresa. Torna-ho a intentar.",
+      "createCompany": "Error en crear l'empresa. Torna-ho a intentar.",
+      "linkProfile": "Error en vincular el perfil amb l'empresa. Torna-ho a intentar.",
+      "createUser": "Error en crear el compte d'usuari. Torna-ho a intentar."
     }
   },
   "dashboard": {
@@ -248,7 +314,72 @@
       "copy": "Copiar Enllaç",
       "copied": "Copiat!",
       "close": "Fet"
+    },
+    "credentialsTitle": "Credencials de l'empleat",
+    "credentialsDescription": "Comparteix aquestes credencials amb l'empleat perquè puga accedir al sistema.",
+    "statusCorrected": "Corregit"
+  },
+  "timeTracking": {
+    "title": "Control de Temps",
+    "subtitle": "Veure totes les entrades de temps dels empleats",
+    "stats": {
+      "totalEmployees": "Total Empleats Hui",
+      "clockedIn": "Actualment Fitxats",
+      "totalHours": "Total Hores Hui"
+    },
+    "filters": {
+      "date": "Data",
+      "employee": "Empleat",
+      "allEmployees": "Tots els Empleats"
+    },
+    "table": {
+      "employee": "Empleat",
+      "clockIn": "Entrada",
+      "clockOut": "Eixida",
+      "breakStart": "Inici Descans",
+      "breakEnd": "Fi Descans",
+      "totalWork": "Temps Treballat",
+      "totalBreak": "Temps Descans",
+      "status": "Estat"
+    },
+    "correctionPending": "Correcció Pendents",
+    "downloadPdf": "Descarregar PDF",
+    "empty": "No s'han trobat entrades de temps per a esta data",
+    "status": {
+      "active": "Actiu",
+      "completed": "Completat",
+      "corrected": "Corregit"
     }
+  },
+  "corrections": {
+    "title": "Correccions de Temps",
+    "subtitle": "Revisar i gestionar les sol·licituds de correcció horària",
+    "tabs": {
+      "pending": "Pendents",
+      "approved": "Aprovades",
+      "rejected": "Denegades"
+    },
+    "table": {
+      "employee": "Empleat",
+      "date": "Data",
+      "reason": "Motiu",
+      "newClockIn": "Nova Entrada",
+      "newClockOut": "Nova Eixida",
+      "status": "Estat",
+      "actions": "Accions"
+    },
+    "review": {
+      "title": "Revisar Correcció Horària",
+      "oldValues": "Valors Originals",
+      "newValues": "Valors Sol·licitats",
+      "clockIn": "Entrada",
+      "clockOut": "Eixida",
+      "breakStart": "Inici Descans",
+      "breakEnd": "Fi Descans",
+      "notes": "Notes de revisió (opcional)",
+      "notesPlaceholder": "Afegeix notes sobre la decisió..."
+    },
+    "empty": "No s'han trobat sol·licituds de correcció"
   },
   "timer": {
     "title": "Registre de Temps",
@@ -274,7 +405,17 @@
     "addNote": "Afegir Nota",
     "project": "Projecte",
     "task": "Tasca",
-    "history": "Historial de Temps"
+    "history": "Historial de Temps",
+    "clockedIn": "Fitxat entrada",
+    "clockedOut": "Fitxat eixida",
+    "breakStarted": "Descans iniciat",
+    "breakEnded": "Descans finalitzat",
+    "correctionRequested": "Sol·licitud de correcció enviada",
+    "correctionTitle": "Sol·licitar correcció horària",
+    "correctionReason": "Motiu de la correcció",
+    "todayHistory": "Entrades d'avui",
+    "noEntriesToday": "No hi ha entrades per a hui",
+    "requestCorrection": "Sol·licitar Correcció"
   },
   "documents": {
     "title": "Documents",
@@ -321,8 +462,8 @@
       "noSearchResults": "Cap document coincideix amb els criteris de cerca"
     },
     "about": {
-      "title": "Sobre els teus documents",
-      "description": "Tots els documents pujats per la teva empresa es guarden de forma segura i xifrada. Pots descarregar aquests documents en qualsevol moment. Si tens dubtes sobre algun document, contacta amb el teu departament de RRHH."
+      "title": "Sobre els teus Documents",
+      "description": "Tots els documents pujats per la teva empresa s'emmagatzemen i xifren de forma segura. Pots descarregar aquests documents en qualsevol moment. Si tens preguntes sobre algun document, posa't en contacte amb el teu departament de RRHH."
     },
     "stats": {
       "total": "Total documents",
@@ -344,6 +485,11 @@
       "signed": "Document signat correctament!",
       "uploadFailed": "Error en pujar el document: {{error}}",
       "deleteFailed": "Error en eliminar el document: {{error}}"
+    },
+    "errors": {
+      "downloadFailed": "Error en descarregar el document. Torna-ho a intentar.",
+      "invalidFileType": "Aquest tipus de fitxer no està permès. Puja fitxers PDF, JPG o PNG.",
+      "fileTooLarge": "La mida del fitxer supera el màxim permès."
     }
   },
   "leave": {

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../config/supabase";
 import { AlarmClockIcon } from "../components/common/AlarmClockIcon";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Eye, EyeOff } from "lucide-react";
 
 interface InvitationData {
   id: string;
@@ -26,6 +26,8 @@ export function AcceptInvitationPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -139,21 +141,20 @@ export function AcceptInvitationPage() {
         .maybeSingle();
 
       if (employeeData) {
-        const { error: updateProfileError } = await supabase
-          .from('profiles')
+        const { error: updateUserError } = await supabase
+          .from('users')
           .update({
-            role: 'employee',
+            type: 'employee',
             company_id: employeeData.company_id,
           })
           .eq('id', authData.user.id);
 
-        if (updateProfileError) {
-          console.error('Error updating profile:', updateProfileError);
+        if (updateUserError) {
+          console.error('Error updating user record:', updateUserError);
         }
       }
 
-      alert('Account created successfully! You can now sign in.');
-      navigate('/login');
+      setSuccess(true);
     } catch (err) {
       console.error("Unexpected error:", err);
       setFormError(t("invitation.error.unexpected"));
@@ -245,30 +246,48 @@ export function AcceptInvitationPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t("invitation.passwordLabel")}
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder={t("invitation.passwordPlaceholder")}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                placeholder={t("invitation.passwordPlaceholder")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t("invitation.confirmLabel")}
             </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder={t("invitation.confirmPlaceholder")}
-            />
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                placeholder={t("invitation.confirmPlaceholder")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <button

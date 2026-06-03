@@ -150,11 +150,7 @@ export function LandingPage() {
           )}
 
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-            Modern <span className="text-teal-600 dark:text-teal-400">HR</span>{" "}
-            Management
-            <br />
-            Made{" "}
-            <span className="text-teal-600 dark:text-teal-400">Simple</span>
+            {t('landing.hero.title')}
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
             {t("landing.hero.subtitle")}
@@ -258,7 +254,7 @@ export function LandingPage() {
             {t("landing.features.title")}
           </h2>
           <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
-            Everything you need to manage your team efficiently in one platform
+            {t('landing.features.subtitle')}
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (

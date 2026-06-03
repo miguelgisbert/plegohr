@@ -10,6 +10,9 @@
     "close": "Close",
     "submit": "Submit",
     "loading": "Loading...",
+    "loadingText": "Loading...",
+    "passwordPlaceholder": "At least 6 characters",
+    "confirmPlaceholder": "Confirm your password",
     "error": "Error",
     "success": "Success",
     "add": "Add",
@@ -33,6 +36,18 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "signed": "Signed"
+    },
+    "email": "Email",
+    "password": "Password",
+    "loginUrl": "Login URL",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "pageNotFound": "Page not found",
+    "goHome": "Go home",
+    "statusColumn": "Status",
+    "errors": {
+      "networkError": "Unable to connect to the server. Please check your internet connection and try again.",
+      "networkErrorShort": "Connection error"
     }
   },
   "nav": {
@@ -42,7 +57,9 @@
     "contact": "Contact",
     "dashboard": "Dashboard",
     "documents": "Documents",
-    "leave": "Leave"
+    "leave": "Leave",
+    "timeTracking": "Time Tracking",
+    "timeCorrections": "Time Corrections"
   },
   "demo": {
     "banner": "Demo Mode — Data shown is fictional. No actions are saved.",
@@ -79,6 +96,7 @@
     },
     "features": {
       "title": "Everything You Need to Manage Your Team",
+      "subtitle": "Everything you need to manage your team efficiently in one platform",
       "timeTracking": {
         "title": "Time Tracking",
         "description": "Accurate time tracking with stopwatch-style controls for work and break periods"
@@ -160,7 +178,43 @@
       "button": "Sign In",
       "orContinueWith": "Or continue with",
       "google": "Continue with Google",
-      "linkedin": "Continue with LinkedIn"
+      "linkedin": "Continue with LinkedIn",
+    "errors": {
+      "signInFailed": "Failed to sign in. Please check your credentials and try again.",
+      "googleSignInFailed": "Failed to sign in with Google. Please try again.",
+      "linkedinSignInFailed": "Failed to sign in with LinkedIn. Please try again."
+    }
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email to receive a password reset link",
+      "emailPlaceholder": "your@email.com",
+      "button": "Send Reset Link",
+      "backToLogin": "Back to Login",
+      "checkEmail": "Check your email",
+      "emailSent": "We've sent a password reset link to your email",
+      "linkExpires": "This link will expire in 1 hour",
+      "errors": {
+        "sendFailed": "Failed to send reset email. Please try again.",
+        "unexpected": "An unexpected error occurred. Please try again."
+      }
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your new password",
+      "button": "Reset Password",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "invalidLink": "Invalid or Expired Link",
+      "invalidLinkMessage": "This password reset link is invalid or has expired.",
+      "requestNewLink": "Request New Reset Link",
+      "success": "Password Reset Successful",
+      "successMessage": "Your password has been successfully updated.",
+      "redirecting": "Redirecting to login...",
+      "errors": {
+        "updateFailed": "Failed to update password. The link may have expired.",
+        "unexpected": "An unexpected error occurred. Please try again."
+      }
     },
     "signup": {
       "title": "Create Your Account",
@@ -173,6 +227,8 @@
       "haveAccount": "Already have an account?",
       "loginLink": "Sign in",
       "button": "Create Account",
+      "passwordPlaceholder": "At least 6 characters",
+      "confirmPlaceholder": "Confirm your password",
       "terms": "By signing up, you agree to our Terms of Service and Privacy Policy",
       "success": {
         "redirecting": "Account created successfully! Redirecting to dashboard...",
@@ -187,6 +243,16 @@
     "confirmation": {
       "success": "Your account has been confirmed successfully. You can continue using the app.",
       "linkExpired": "This confirmation link has expired. Please request a new confirmation email from the sign-in screen."
+    },
+    "errors": {
+      "fetchProfile": "Failed to load user profile. Please refresh the page.",
+      "profileCreationFailed": "Profile creation failed. Please try logging in again.",
+      "companyExists": "This company name already exists. Please use a different name.",
+      "verifyCompany": "Failed to verify company information.",
+      "resolveCompany": "Failed to resolve company. Please try again.",
+      "createCompany": "Failed to create company. Please try again.",
+      "linkProfile": "Failed to link profile to company. Please try again.",
+      "createUser": "Failed to create user account. Please try again."
     }
   },
   "dashboard": {
@@ -248,7 +314,72 @@
       "copy": "Copy Link",
       "copied": "Copied!",
       "close": "Done"
+    },
+    "credentialsTitle": "Employee Credentials",
+    "credentialsDescription": "Share these credentials with the employee so they can access the system.",
+    "statusCorrected": "Corrected"
+  },
+  "timeTracking": {
+    "title": "Time Tracking",
+    "subtitle": "View all employee time entries",
+    "stats": {
+      "totalEmployees": "Total Employees Today",
+      "clockedIn": "Currently Clocked In",
+      "totalHours": "Total Hours Today"
+    },
+    "filters": {
+      "date": "Date",
+      "employee": "Employee",
+      "allEmployees": "All Employees"
+    },
+    "table": {
+      "employee": "Employee",
+      "clockIn": "Clock In",
+      "clockOut": "Clock Out",
+      "breakStart": "Break Start",
+      "breakEnd": "Break End",
+      "totalWork": "Total Work Time",
+      "totalBreak": "Total Break Time",
+      "status": "Status"
+    },
+    "correctionPending": "Correction Pending",
+    "downloadPdf": "Download PDF",
+    "empty": "No time entries found for this date",
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "corrected": "Corrected"
     }
+  },
+  "corrections": {
+    "title": "Time Corrections",
+    "subtitle": "Review and manage employee time correction requests",
+    "tabs": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "table": {
+      "employee": "Employee",
+      "date": "Date",
+      "reason": "Reason",
+      "newClockIn": "New Clock In",
+      "newClockOut": "New Clock Out",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "review": {
+      "title": "Review Time Correction",
+      "oldValues": "Original Values",
+      "newValues": "Requested Values",
+      "clockIn": "Clock In",
+      "clockOut": "Clock Out",
+      "breakStart": "Break Start",
+      "breakEnd": "Break End",
+      "notes": "Review Notes (optional)",
+      "notesPlaceholder": "Add any notes about this decision..."
+    },
+    "empty": "No correction requests found"
   },
   "timer": {
     "title": "Time Tracker",
@@ -274,7 +405,17 @@
     "addNote": "Add Note",
     "project": "Project",
     "task": "Task",
-    "history": "Time History"
+    "history": "Time History",
+    "clockedIn": "Clocked in",
+    "clockedOut": "Clocked out",
+    "breakStarted": "Break started",
+    "breakEnded": "Break ended",
+    "correctionRequested": "Correction request sent",
+    "correctionTitle": "Request Time Correction",
+    "correctionReason": "Reason for correction",
+    "todayHistory": "Today's Entries",
+    "noEntriesToday": "No time entries for today",
+    "requestCorrection": "Request Correction"
   },
   "documents": {
     "title": "Documents",
@@ -320,6 +461,9 @@
       "noCompanyDocs": "Your company has not uploaded any documents yet",
       "noSearchResults": "No documents match your search criteria"
     },
+    "errors": {
+      "downloadFailed": "Error downloading document"
+    },
     "about": {
       "title": "About Your Documents",
       "description": "All documents uploaded by your company are securely stored and encrypted. You can download these documents at any time. If you have questions about any document, please contact your HR department."
@@ -344,6 +488,11 @@
       "signed": "Document signed successfully!",
       "uploadFailed": "Failed to upload document: {{error}}",
       "deleteFailed": "Failed to delete document: {{error}}"
+    },
+    "errors": {
+      "downloadFailed": "Failed to download the document. Please try again.",
+      "invalidFileType": "This file type is not allowed. Please upload PDF, JPG, or PNG files.",
+      "fileTooLarge": "File size exceeds the maximum allowed size."
     }
   },
   "leave": {

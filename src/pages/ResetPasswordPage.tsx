@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../config/supabase';
 import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
 import { Navigation } from '../components/landing/Navigation';
-import { Lock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Lock, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { getErrorMessage } from '../utils/errorUtils';
 
 export function ResetPasswordPage() {
   const { t } = useTranslation();
@@ -16,6 +17,8 @@ export function ResetPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [validToken, setValidToken] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     // Verify that we have a hash token (Supabase puts recovery token in hash)
@@ -30,12 +33,12 @@ export function ResetPasswordPage() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError(t('auth.resetPassword.passwordMismatch') || 'Passwords do not match');
+      setError(t('auth.resetPassword.passwordMismatch'));
       return;
     }
 
     if (password.length < 6) {
-      setError(t('auth.resetPassword.passwordTooShort') || 'Password must be at least 6 characters');
+      setError(t('auth.resetPassword.passwordTooShort'));
       return;
     }
 
@@ -48,7 +51,7 @@ export function ResetPasswordPage() {
       });
 
       if (updateError) {
-        setError(updateError.message || 'Failed to update password');
+        setError(getErrorMessage(updateError, t, 'common.errors.networkError', 'auth.resetPassword.errors.updateFailed'));
         setLoading(false);
       } else {
         setSubmitted(true);
@@ -58,7 +61,7 @@ export function ResetPasswordPage() {
         }, 2000);
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.resetPassword.errors.unexpected'));
       setLoading(false);
     }
   };
@@ -78,26 +81,26 @@ export function ResetPasswordPage() {
                 <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('auth.resetPassword.invalidLink') || 'Invalid Reset Link'}
+                {t('auth.resetPassword.invalidLink')}
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {t('auth.resetPassword.invalidLinkMessage') || 'This password reset link is invalid or has expired.'}
+                {t('auth.resetPassword.invalidLinkMessage')}
               </p>
               <button
                 onClick={() => navigate('/forgot-password')}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold"
               >
-                {t('auth.resetPassword.requestNewLink') || 'Request New Link'}
+                {t('auth.resetPassword.requestNewLink')}
               </button>
             </div>
           ) : !submitted ? (
             <>
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  {t('auth.resetPassword.title') || 'Reset Password'}
+                  {t('auth.resetPassword.title')}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {t('auth.resetPassword.subtitle') || 'Enter your new password below'}
+                  {t('auth.resetPassword.subtitle')}
                 </p>
               </div>
 
@@ -111,32 +114,50 @@ export function ResetPasswordPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t('auth.signup.password') || 'Password'}
+                      {t('auth.signup.password')}
                     </label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      placeholder="At least 6 characters"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                        className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        placeholder={t('auth.signup.passwordPlaceholder')}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t('auth.signup.confirmPassword') || 'Confirm Password'}
+                      {t('auth.signup.confirmPassword')}
                     </label>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      placeholder="Confirm your password"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        minLength={6}
+                        className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        placeholder={t('auth.signup.confirmPlaceholder')}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
 
                   <button
@@ -145,7 +166,7 @@ export function ResetPasswordPage() {
                     className="w-full py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <Lock className="w-5 h-5" />
-                    {loading ? t('common.loading') || 'Loading...' : t('auth.resetPassword.button') || 'Reset Password'}
+                    {loading ? t('common.loading') : t('auth.resetPassword.button')}
                   </button>
                 </form>
               </div>
@@ -156,13 +177,13 @@ export function ResetPasswordPage() {
                 <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('auth.resetPassword.success') || 'Password Reset Successful'}
+                {t('auth.resetPassword.success')}
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {t('auth.resetPassword.successMessage') || 'Your password has been reset successfully. You will be redirected to the login page shortly.'}
+                {t('auth.resetPassword.successMessage')}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t('auth.resetPassword.redirecting') || 'Redirecting in 2 seconds...'}
+                {t('auth.resetPassword.redirecting')}
               </p>
             </div>
           )}

@@ -5,6 +5,7 @@ import { supabase } from '../config/supabase';
 import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
 import { Navigation } from '../components/landing/Navigation';
 import { Mail, ArrowLeft } from 'lucide-react';
+import { getErrorMessage } from '../utils/errorUtils';
 
 export function ForgotPasswordPage() {
   const { t } = useTranslation();
@@ -24,13 +25,13 @@ export function ForgotPasswordPage() {
       });
 
       if (resetError) {
-        setError(resetError.message || 'Failed to send reset email');
+        setError(getErrorMessage(resetError, t, 'common.errors.networkError', 'auth.forgotPassword.errors.sendFailed'));
         setLoading(false);
       } else {
         setSubmitted(true);
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.forgotPassword.errors.unexpected'));
       setLoading(false);
     }
   };
@@ -48,10 +49,10 @@ export function ForgotPasswordPage() {
             <>
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  {t('auth.forgotPassword.title') || 'Forgot Password?'}
+                  {t('auth.forgotPassword.title')}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {t('auth.forgotPassword.subtitle') || "Enter your email and we'll send you a link to reset your password"}
+                  {t('auth.forgotPassword.subtitle')}
                 </p>
               </div>
 
@@ -65,7 +66,7 @@ export function ForgotPasswordPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t('auth.login.email') || 'Email'}
+                      {t('auth.login.email')}
                     </label>
                     <input
                       type="email"
@@ -73,7 +74,7 @@ export function ForgotPasswordPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      placeholder="your@email.com"
+                      placeholder={t('auth.forgotPassword.emailPlaceholder')}
                     />
                   </div>
 
@@ -83,14 +84,14 @@ export function ForgotPasswordPage() {
                     className="w-full py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <Mail className="w-5 h-5" />
-                    {loading ? t('common.loading') || 'Loading...' : t('auth.forgotPassword.button') || 'Send Reset Link'}
+                    {loading ? t('common.loading') : t('auth.forgotPassword.button')}
                   </button>
                 </form>
 
                 <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
                   <Link to="/login" className="text-teal-600 dark:text-teal-400 font-medium hover:underline flex items-center justify-center gap-2">
                     <ArrowLeft className="w-4 h-4" />
-                    {t('auth.forgotPassword.backToLogin') || 'Back to Login'}
+{t('auth.forgotPassword.backToLogin')}
                   </Link>
                 </p>
               </div>
@@ -101,20 +102,20 @@ export function ForgotPasswordPage() {
                 <Mail className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('auth.forgotPassword.checkEmail') || 'Check your email'}
+                {t('auth.forgotPassword.checkEmail')}
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {t('auth.forgotPassword.emailSent') || 'We sent a password reset link to your email address. Please check your inbox (and spam folder just in case).'}
+                {t('auth.forgotPassword.emailSent')}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                {t('auth.forgotPassword.linkExpires') || 'The link expires in 24 hours.'}
+                {t('auth.forgotPassword.linkExpires')}
               </p>
               <Link
                 to="/login"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold"
               >
                 <ArrowLeft className="w-4 h-4" />
-                {t('auth.forgotPassword.backToLogin') || 'Back to Login'}
+                {t('auth.forgotPassword.backToLogin')}
               </Link>
             </div>
           )}

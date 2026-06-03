@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS employee_invitations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   employee_id uuid REFERENCES employees(id) ON DELETE CASCADE NOT NULL,
   email text NOT NULL,
-  token text UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+  token text UNIQUE NOT NULL DEFAULT replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', ''),
   status text DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired')),
   invited_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   invited_at timestamptz DEFAULT now(),
