@@ -1,40 +1,15 @@
 import { useTranslation } from 'react-i18next';
+import { TopNav } from '../components/common/TopNav';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Calendar as CalendarIcon } from 'lucide-react';
-import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
-import { ThemeToggle } from '../components/common/ThemeToggle';
-import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
-import { useNavigate, Link } from 'react-router-dom';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
-import {
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  Card,
-  CardContent,
-  Typography,
-  Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Box,
-  Grid,
-  IconButton,
-} from '@mui/material';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Card, CardContent, Typography, Chip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Grid, IconButton,  } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
-import dayjs, { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs';
 
 interface LeaveType {
   id: string;
@@ -55,9 +30,8 @@ interface LeaveRequest {
 
 export function EmployeeLeavePage() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
+  const { user } = useAuth();
+  
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
@@ -112,7 +86,7 @@ export function EmployeeLeavePage() {
       .order('requested_at', { ascending: false });
 
     if (!error && data) {
-      setLeaveRequests(data as any);
+      setLeaveRequests(data as unknown as LeaveRequest[]);
     }
   };
 
@@ -152,12 +126,7 @@ export function EmployeeLeavePage() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
-
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'success' | 'error' | 'warning' => {
     switch (status) {
       case 'approved':
         return 'success';
@@ -178,50 +147,7 @@ export function EmployeeLeavePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <AlarmClockIcon className="w-8 h-8 text-teal-600 dark:text-teal-400" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">PlegoHR</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => navigate('/employee-dashboard')}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  {t('nav.dashboard')}
-                </button>
-                <button
-                  onClick={() => navigate('/employee-documents')}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  {t('nav.documents')}
-                </button>
-                <button
-                  onClick={() => navigate('/employee-leave')}
-                  className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400"
-                >
-                  {t('nav.leave')}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="hidden md:inline">{t('common.logout')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <TopNav role="employee" active="leave" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
@@ -244,7 +170,7 @@ export function EmployeeLeavePage() {
         </Box>
 
         <Grid container spacing={3} mb={4}>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent sx={{ textAlign: 'center' }}>
                 <Typography variant="h3" color="warning.main" fontWeight="bold">
@@ -256,7 +182,7 @@ export function EmployeeLeavePage() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent sx={{ textAlign: 'center' }}>
                 <Typography variant="h3" color="success.main" fontWeight="bold">
@@ -268,7 +194,7 @@ export function EmployeeLeavePage() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent sx={{ textAlign: 'center' }}>
                 <Typography variant="h3" color="primary.main" fontWeight="bold">
@@ -341,7 +267,7 @@ export function EmployeeLeavePage() {
                       <TableCell>
                         <Chip
                           label={t(`leave.status.${request.status}`)}
-                          color={getStatusColor(request.status) as any}
+                          color={getStatusColor(request.status)}
                           size="small"
                         />
                         {request.review_notes && (

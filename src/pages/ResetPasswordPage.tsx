@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../config/supabase';
 import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
@@ -10,7 +10,6 @@ import { getErrorMessage } from '../utils/errorUtils';
 export function ResetPasswordPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,11 +20,18 @@ export function ResetPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
-    // Verify that we have a hash token (Supabase puts recovery token in hash)
+    // Supabase extracts the recovery token from the URL hash and may clear it
+    // before this component mounts, so accept either the raw hash markers or
+    // an active session (the session is what updateUser() will use).
     const hash = window.location.hash;
-    if (!hash || !hash.includes('type=recovery')) {
-      setValidToken(false);
-    }
+    const hasRecoveryHash =
+      hash.includes('type=recovery') || hash.includes('access_token');
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session && !hasRecoveryHash) {
+        setValidToken(false);
+      }
+    });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +66,7 @@ export function ResetPasswordPage() {
           navigate('/login');
         }, 2000);
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.resetPassword.errors.unexpected'));
       setLoading(false);
     }

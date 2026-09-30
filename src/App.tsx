@@ -1,4 +1,6 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
@@ -7,28 +9,44 @@ import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { EmployeeDashboardPage } from './pages/EmployeeDashboardPage';
 import { AcceptInvitationPage } from './pages/AcceptInvitationPage';
-import { CompanyDocumentsPage } from './pages/CompanyDocumentsPage';
-import { EmployeeDocumentsPage } from './pages/EmployeeDocumentsPage';
-import { CompanyLeavePage } from './pages/CompanyLeavePage';
-import { EmployeeLeavePage } from './pages/EmployeeLeavePage';
-import { AdminTimeTrackingPage } from './pages/AdminTimeTrackingPage';
-import { AdminCorrectionsPage } from './pages/AdminCorrectionsPage';
-import { PreviewCompanyDashboardPage } from './pages/PreviewCompanyDashboardPage';
-import { PreviewEmployeeDashboardPage } from './pages/PreviewEmployeeDashboardPage';
-import { PreviewCompanyDocumentsPage } from './pages/PreviewCompanyDocumentsPage';
-import { PreviewEmployeeDocumentsPage } from './pages/PreviewEmployeeDocumentsPage';
-import { PreviewCompanyLeavePage } from './pages/PreviewCompanyLeavePage';
-import { PreviewEmployeeLeavePage } from './pages/PreviewEmployeeLeavePage';
 import NotFoundPage from './pages/NotFoundPage';
+
+// Heavy pages (charts, PDF engine, document viewers) load on demand so the
+// first paint stays small and the PWA precache stays under control.
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const EmployeeDashboardPage = lazy(() => import('./pages/EmployeeDashboardPage').then((m) => ({ default: m.EmployeeDashboardPage })));
+const CompanyDocumentsPage = lazy(() => import('./pages/CompanyDocumentsPage').then((m) => ({ default: m.CompanyDocumentsPage })));
+const EmployeeDocumentsPage = lazy(() => import('./pages/EmployeeDocumentsPage').then((m) => ({ default: m.EmployeeDocumentsPage })));
+const CompanyLeavePage = lazy(() => import('./pages/CompanyLeavePage').then((m) => ({ default: m.CompanyLeavePage })));
+const EmployeeLeavePage = lazy(() => import('./pages/EmployeeLeavePage').then((m) => ({ default: m.EmployeeLeavePage })));
+const AdminTimeTrackingPage = lazy(() => import('./pages/AdminTimeTrackingPage').then((m) => ({ default: m.AdminTimeTrackingPage })));
+const AdminCorrectionsPage = lazy(() => import('./pages/AdminCorrectionsPage').then((m) => ({ default: m.AdminCorrectionsPage })));
+const PreviewCompanyDashboardPage = lazy(() => import('./pages/PreviewCompanyDashboardPage').then((m) => ({ default: m.PreviewCompanyDashboardPage })));
+const PreviewEmployeeDashboardPage = lazy(() => import('./pages/PreviewEmployeeDashboardPage').then((m) => ({ default: m.PreviewEmployeeDashboardPage })));
+const PreviewCompanyDocumentsPage = lazy(() => import('./pages/PreviewCompanyDocumentsPage').then((m) => ({ default: m.PreviewCompanyDocumentsPage })));
+const PreviewEmployeeDocumentsPage = lazy(() => import('./pages/PreviewEmployeeDocumentsPage').then((m) => ({ default: m.PreviewEmployeeDocumentsPage })));
+const PreviewCompanyLeavePage = lazy(() => import('./pages/PreviewCompanyLeavePage').then((m) => ({ default: m.PreviewCompanyLeavePage })));
+const PreviewEmployeeLeavePage = lazy(() => import('./pages/PreviewEmployeeLeavePage').then((m) => ({ default: m.PreviewEmployeeLeavePage })));
+
+function PageFallback() {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-gray-600 dark:text-gray-300">{t('common.loading')}</p>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
+          <Suspense fallback={<PageFallback />}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
@@ -57,6 +75,7 @@ function App() {
             <Route path="/time-corrections" element={<ProtectedRoute requiredRole="admin"><AdminCorrectionsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          </Suspense>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

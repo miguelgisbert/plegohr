@@ -47,8 +47,10 @@
     "statusColumn": "Estat",
     "errors": {
       "networkError": "No es pot connectar al servidor. Comprova la teva connexió a Internet i torna-ho a intentar.",
-      "networkErrorShort": "Error de connexió"
-    }
+      "networkErrorShort": "Error de connexió",
+      "unexpected": "S'ha produït un error inesperat. Torneu-ho a provar."
+    },
+    "preview": "Vista prèvia"
   },
   "nav": {
     "features": "Característiques",
@@ -179,11 +181,11 @@
       "orContinueWith": "O continua amb",
       "google": "Continuar amb Google",
       "linkedin": "Continuar amb LinkedIn",
-    "errors": {
-      "signInFailed": "Error en iniciar sessió. Verifica les teves credencials i torna-ho a intentar.",
-      "googleSignInFailed": "Error en iniciar sessió amb Google. Torna-ho a intentar.",
-      "linkedinSignInFailed": "Error en iniciar sessió amb LinkedIn. Torna-ho a intentar."
-    }
+      "errors": {
+        "signInFailed": "Error en iniciar sessió. Verifica les teves credencials i torna-ho a intentar.",
+        "googleSignInFailed": "Error en iniciar sessió amb Google. Torna-ho a intentar.",
+        "linkedinSignInFailed": "Error en iniciar sessió amb LinkedIn. Torna-ho a intentar."
+      }
     },
     "forgotPassword": {
       "title": "He oblidat la Contrasenya",
@@ -301,12 +303,10 @@
       "invitationSent": "Invitació enviada correctament!",
       "invitationFailed": "Empleat creat però l'email d'invitació ha fallat.",
       "sendFailed": "Error en enviar l'email d'invitació.",
-      "addFailed": "Error en crear l'empleat: {{error}}",
-      "updateFailed": "Error en actualitzar l'empleat: {{error}}",
-      "deleteFailed": "Error en eliminar l'empleat: {{error}}",
       "authError": "Error d'autenticació. Si us plau, inicia sessió de nou.",
       "noCompany": "Empresa no trobada. Si us plau, recarrega la pàgina.",
-      "unexpected": "S'ha produït un error inesperat. Si us plau, torna-ho a intentar."
+      "unexpected": "S'ha produït un error inesperat. Si us plau, torna-ho a intentar.",
+      "emailNotSent": "Invitació desada, però no s’ha pogut enviar el correu. Comparteix l’enllaç d’invitació manualment."
     },
     "invitation": {
       "title": "Empleat Afegit",
@@ -315,17 +315,15 @@
       "copied": "Copiat!",
       "close": "Fet"
     },
-    "credentialsTitle": "Credencials de l'empleat",
-    "credentialsDescription": "Comparteix aquestes credencials amb l'empleat perquè puga accedir al sistema.",
     "statusCorrected": "Corregit"
   },
   "timeTracking": {
     "title": "Control de Temps",
     "subtitle": "Veure totes les entrades de temps dels empleats",
     "stats": {
-      "totalEmployees": "Total Empleats Hui",
+      "totalEmployees": "Empleats amb registres",
       "clockedIn": "Actualment Fitxats",
-      "totalHours": "Total Hores Hui"
+      "totalHours": "Hores totals"
     },
     "filters": {
       "date": "Data",
@@ -344,11 +342,32 @@
     },
     "correctionPending": "Correcció Pendents",
     "downloadPdf": "Descarregar PDF",
-    "empty": "No s'han trobat entrades de temps per a esta data",
+    "empty": "No s’han trobat registres de temps en aquest període",
     "status": {
       "active": "Actiu",
       "completed": "Completat",
       "corrected": "Corregit"
+    },
+    "period": {
+      "day": "Dia",
+      "week": "Setmana",
+      "month": "Mes"
+    },
+    "previousPeriod": "Període anterior",
+    "nextPeriod": "Període següent",
+    "chart": {
+      "title": "Hores per empleat",
+      "hours": "Hores"
+    },
+    "pdf": {
+      "reportTitle": "Informe de jornada",
+      "period": "Període",
+      "generatedBy": "Generat",
+      "total": "Total",
+      "empty": "No hi ha registres de temps per exportar en aquest període.",
+      "success": "Informe PDF descarregat.",
+      "failed": "No s’ha pogut generar l’informe PDF.",
+      "preparing": "Preparant PDF..."
     }
   },
   "corrections": {
@@ -379,7 +398,14 @@
       "notes": "Notes de revisió (opcional)",
       "notesPlaceholder": "Afegeix notes sobre la decisió..."
     },
-    "empty": "No s'han trobat sol·licituds de correcció"
+    "empty": "No s'han trobat sol·licituds de correcció",
+    "myRequests": "Les meves sol·licituds de correcció",
+    "toast": {
+      "approved": "Correcció aprovada i aplicada al registre de temps.",
+      "rejected": "Correcció rebutjada.",
+      "applyFailed": "No s’ha pogut aplicar la correcció al registre de temps.",
+      "reviewFailed": "No s’ha pogut desar la revisió. Torna-ho a provar."
+    }
   },
   "timer": {
     "title": "Registre de Temps",
@@ -415,7 +441,8 @@
     "correctionReason": "Motiu de la correcció",
     "todayHistory": "Entrades d'avui",
     "noEntriesToday": "No hi ha entrades per a hui",
-    "requestCorrection": "Sol·licitar Correcció"
+    "requestCorrection": "Sol·licitar Correcció",
+    "alreadyClockedIn": "Ja has fitxat avui."
   },
   "documents": {
     "title": "Documents",
@@ -431,7 +458,9 @@
       "description": "Descripció",
       "descriptionPlaceholder": "Descripció del document...",
       "fileLabel": "Fitxer (demo)",
-      "filePlaceholder": "Clica per seleccionar un fitxer (simulat en demo)"
+      "filePlaceholder": "Clica per seleccionar un fitxer (simulat en demo)",
+      "requireSignature": "Requereix signatura de l'empleat",
+      "fileHint": "PDF, JPG o PNG. Màxim {{max}} MB."
     },
     "types": {
       "contract": "Contracte",
@@ -477,19 +506,32 @@
     "confirmDelete": "Segur que vols eliminar aquest document?",
     "status": {
       "signed": "Signat",
-      "pending": "Pendent"
+      "pending": "Pendent",
+      "notRequired": "No requerida"
     },
     "toast": {
       "uploaded": "Document pujat correctament!",
       "deleted": "Document eliminat correctament!",
       "signed": "Document signat correctament!",
-      "uploadFailed": "Error en pujar el document: {{error}}",
-      "deleteFailed": "Error en eliminar el document: {{error}}"
+      "signFailed": "No s'ha pogut signar el document. Torneu-ho a provar.",
+      "alreadySigned": "Aquest document ja està signat.",
+      "signatureNotRequired": "Aquest document no requer signatura.",
+      "signatureUpdated": "Requisit de signatura actualitzat.",
+      "signatureUpdateFailed": "No s'ha pogut actualitzar el requisit de signatura."
     },
     "errors": {
       "downloadFailed": "Error en descarregar el document. Torna-ho a intentar.",
       "invalidFileType": "Aquest tipus de fitxer no està permès. Puja fitxers PDF, JPG o PNG.",
-      "fileTooLarge": "La mida del fitxer supera el màxim permès."
+      "fileTooLarge": "La mida del fitxer supera el màxim permès.",
+      "previewFailed": "No s'ha pogut obrir la vista prèvia del document.",
+      "previewNotSupported": "Aquest tipus de fitxer no es pot previsualitzar. Descarregueu-lo."
+    },
+    "sign": "Signar document",
+    "signing": "Signant...",
+    "confirmSign": "Voleu signar aquest document? Es registrarà el vostre nom i la data de signatura.",
+    "actions": {
+      "requireSignature": "Requerir signatura",
+      "signatureOptional": "Fer la signatura opcional"
     }
   },
   "leave": {
@@ -599,7 +641,14 @@
       "passwordTooShort": "La contrasenya ha de tenir almenys 6 caràcters",
       "createFailed": "Error en crear el compte: {{message}}",
       "createAccountFailed": "Error en crear el compte",
-      "unexpected": "S'ha produït un error inesperat. Si us plau, torna-ho a intentar."
-    }
+      "unexpected": "S'ha produït un error inesperat. Si us plau, torna-ho a intentar.",
+      "accountExists": "Ja existeix un compte amb aquest correu. Inicia sessió amb la contrasenya o sol·licita un restabliment.",
+      "emailMismatch": "Aquesta invitació s’ha enviat a un altre correu. Obre l’enllaç des del teu propi correu d’invitació."
+    },
+    "subtitleWithCompany": "Crea el teu compte per unir-te a {{company}}",
+    "successAccepted": "Invitació acceptada. Redirigint al teu tauler...",
+    "goToDashboard": "Anar al tauler",
+    "emailPendingTitle": "Confirma el teu correu",
+    "emailPendingText": "Hem enviat un enllaç de confirmació a {{email}}. Fes-hi clic per acabar de crear el teu compte."
   }
 }

@@ -29,8 +29,9 @@ export function ForgotPasswordPage() {
         setLoading(false);
       } else {
         setSubmitted(true);
+        setLoading(false);
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.forgotPassword.errors.unexpected'));
       setLoading(false);
     }

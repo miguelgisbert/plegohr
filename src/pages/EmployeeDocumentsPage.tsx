@@ -1,10 +1,8 @@
 import { useTranslation } from 'react-i18next';
+import { TopNav } from '../components/common/TopNav';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, FileText, Download, Search, Filter } from 'lucide-react';
-import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
-import { ThemeToggle } from '../components/common/ThemeToggle';
-import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
-import { useNavigate, Link } from 'react-router-dom';
+import { FileText, Download, Search, Filter, Eye, PenLine, X } from 'lucide-react';
+import { Toast } from '../components/common/Toast';
 import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 
@@ -17,16 +15,21 @@ interface Document {
   document_type: string;
   uploaded_at: string;
   description: string | null;
+  requires_signature: boolean;
+  signed_at: string | null;
 }
 
 export function EmployeeDocumentsPage() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
+  const { user } = useAuth();
+  
   const [documents, setDocuments] = useState<Document[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('');
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [signingId, setSigningId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
     loadDocuments();
@@ -74,9 +77,55 @@ export function EmployeeDocumentsPage() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+  const handlePreview = async (doc: Document) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(doc.file_path, 3600);
+
+      if (error) throw error;
+
+      setPreviewDoc(doc);
+      setPreviewUrl(data.signedUrl);
+    } catch (error) {
+      console.error('Preview error:', error);
+      setToast({ message: t('documents.errors.previewFailed'), type: 'error' });
+    }
+  };
+
+  const closePreview = () => {
+    setPreviewDoc(null);
+    setPreviewUrl(null);
+  };
+
+  const handleSign = async (doc: Document) => {
+    if (!confirm(t('documents.confirmSign'))) return;
+
+    setSigningId(doc.id);
+    try {
+      const { error } = await supabase.rpc('sign_document', {
+        p_document_id: doc.id,
+      });
+
+      if (error) throw error;
+
+      setToast({ message: t('documents.toast.signed'), type: 'success' });
+      await loadDocuments();
+    } catch (error) {
+      console.error('Sign error:', error);
+      const code = (error as { code?: string; message?: string })?.message ?? '';
+      if (code.includes('already_signed')) {
+        setToast({ message: t('documents.toast.alreadySigned'), type: 'info' });
+        await loadDocuments();
+      } else if (code.includes('signature_not_required')) {
+        setToast({ message: t('documents.toast.signatureNotRequired'), type: 'info' });
+        await loadDocuments();
+      } else {
+        setToast({ message: t('documents.toast.signFailed'), type: 'error' });
+      }
+    } finally {
+      setSigningId(null);
+    }
   };
 
   const filteredDocuments = documents.filter((doc) => {
@@ -93,54 +142,14 @@ export function EmployeeDocumentsPage() {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   };
 
+  const signatureStatus = (doc: Document): 'signed' | 'pending' | 'none' =>
+    doc.signed_at ? 'signed' : doc.requires_signature ? 'pending' : 'none';
+
   const documentTypes = Array.from(new Set(documents.map((doc) => doc.document_type)));
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <AlarmClockIcon className="w-8 h-8 text-teal-600 dark:text-teal-400" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">PlegoHR</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => navigate('/employee-dashboard')}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  {t('nav.dashboard')}
-                </button>
-                <button
-                  onClick={() => navigate('/employee-documents')}
-                  className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400"
-                >
-                  {t('nav.documents')}
-                </button>
-                <button
-                  onClick={() => navigate('/employee-leave')}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  {t('nav.leave')}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="hidden md:inline">{t('common.logout')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <TopNav role="employee" active="documents" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -216,6 +225,9 @@ export function EmployeeDocumentsPage() {
                       {t('documents.columns.date')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      {t('documents.columns.status')}
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       {t('documents.columns.actions')}
                     </th>
                   </tr>
@@ -252,13 +264,49 @@ export function EmployeeDocumentsPage() {
                         {new Date(doc.uploaded_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleDownload(doc)}
-                          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
-                        >
-                          <Download className="w-4 h-4" />
-                          {t('common.download')}
-                        </button>
+                        {signatureStatus(doc) === 'signed' ? (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
+                            {t('documents.status.signed')}
+                          </span>
+                        ) : signatureStatus(doc) === 'pending' ? (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400">
+                            {t('documents.status.pending')}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                            {t('documents.status.notRequired')}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handlePreview(doc)}
+                            className="p-2 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+                            title={t('common.preview')}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          {doc.requires_signature && !doc.signed_at && (
+                            <button
+                              onClick={() => handleSign(doc)}
+                              disabled={signingId === doc.id}
+                              className="flex items-center gap-2 px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <PenLine className="w-4 h-4" />
+                              {signingId === doc.id
+                                ? t('documents.signing')
+                                : t('documents.sign')}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDownload(doc)}
+                            className="p-2 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+                            title={t('common.download')}
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -282,6 +330,84 @@ export function EmployeeDocumentsPage() {
           </div>
         </div>
       </main>
+
+      {previewDoc && previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={closePreview}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {previewDoc.file_name}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t(`documents.types.${previewDoc.document_type}`, { defaultValue: previewDoc.document_type })}
+                </p>
+              </div>
+              <button
+                onClick={closePreview}
+                className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title={t('common.close')}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-auto flex-1">
+              {previewDoc.file_type.startsWith('image/') ? (
+                <img
+                  src={previewUrl}
+                  alt={previewDoc.file_name}
+                  className="mx-auto max-h-[70vh] rounded"
+                />
+              ) : previewDoc.file_type === 'application/pdf' || previewDoc.file_name.toLowerCase().endsWith('.pdf') ? (
+                <iframe
+                  src={previewUrl}
+                  title={previewDoc.file_name}
+                  className="w-full h-[70vh] rounded border-0"
+                />
+              ) : (
+                <div className="p-8 text-center">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t('documents.errors.previewNotSupported')}
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              {previewDoc.requires_signature && !previewDoc.signed_at && (
+                <button
+                  onClick={() => {
+                    const doc = previewDoc;
+                    closePreview();
+                    handleSign(doc);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
+                >
+                  <PenLine className="w-4 h-4" />
+                  {t('documents.sign')}
+                </button>
+              )}
+              <button
+                onClick={() => handleDownload(previewDoc)}
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
+              >
+                <Download className="w-4 h-4" />
+                {t('common.download')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
     </div>
   );
 }

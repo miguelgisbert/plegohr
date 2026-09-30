@@ -1,11 +1,8 @@
 import { useTranslation } from 'react-i18next';
+import { TopNav } from '../components/common/TopNav';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Clock, Play, Square, Coffee } from 'lucide-react';
-import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
-import { ThemeToggle } from '../components/common/ThemeToggle';
-import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
+import { Clock, Play, Square, Coffee } from 'lucide-react';
 import { Toast } from '../components/common/Toast';
-import { useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../config/supabase';
 
@@ -28,19 +25,45 @@ interface EmployeeRecord {
   company_id: string;
 }
 
+interface CorrectionRequest {
+  id: string;
+  status: string;
+  reason: string;
+  new_clock_in: string | null;
+  new_clock_out: string | null;
+  requested_at: string;
+  time_entry?: { date: string } | { date: string }[] | null;
+}
+
 interface ToastMessage {
   message: string;
   type: 'success' | 'error' | 'info';
 }
 
+// The `date` column must follow the employee's local day, not the UTC day.
+const toLocalDateKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// datetime-local inputs work with local wall time, not with UTC ISO strings.
+const toLocalInputValue = (iso: string | null): string => {
+  if (!iso) return '';
+  const date = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
 export function EmployeeDashboardPage() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
+  const { user } = useAuth();
+  
   const [employee, setEmployee] = useState<EmployeeRecord | null>(null);
   const [timeEntry, setTimeEntry] = useState<TimeEntry | null>(null);
   const [todayEntries, setTodayEntries] = useState<TimeEntry[]>([]);
+  const [correctionRequests, setCorrectionRequests] = useState<CorrectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
@@ -71,7 +94,7 @@ export function EmployeeDashboardPage() {
   }, [user]);
 
   const loadTodayEntry = useCallback(async (employeeId: string) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateKey(new Date());
     const { data } = await supabase
       .from('time_entries')
       .select('*')
@@ -83,8 +106,18 @@ export function EmployeeDashboardPage() {
     return data;
   }, []);
 
+  const loadCorrections = useCallback(async (employeeId: string) => {
+    const { data } = await supabase
+      .from('time_corrections')
+      .select('id, status, reason, new_clock_in, new_clock_out, requested_at, time_entry:time_entries(date)')
+      .eq('employee_id', employeeId)
+      .order('requested_at', { ascending: false })
+      .limit(10);
+    setCorrectionRequests((data || []) as unknown as CorrectionRequest[]);
+  }, []);
+
   const loadTodayHistory = useCallback(async (employeeId: string) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateKey(new Date());
     const { data } = await supabase
       .from('time_entries')
       .select('*')
@@ -94,6 +127,43 @@ export function EmployeeDashboardPage() {
     setTodayEntries(data || []);
   }, []);
 
+  // Mirrors the server rule: worked = elapsed - all breaks (running + past).
+  const syncCounters = useCallback((entry: TimeEntry | null, onBreak: boolean) => {
+    if (!entry || !entry.clock_in) {
+      setCurrentSeconds(0);
+      setCurrentBreakSeconds(0);
+      return;
+    }
+    const breakAccumulated = entry.break_seconds || 0;
+    const breakRunning = onBreak && entry.break_start
+      ? Math.max(0, Math.floor((Date.now() - new Date(entry.break_start).getTime()) / 1000))
+      : 0;
+    const breakTotal = breakAccumulated + breakRunning;
+
+    if (entry.status !== 'active') {
+      setCurrentSeconds(entry.total_seconds || 0);
+      setCurrentBreakSeconds(breakAccumulated);
+      return;
+    }
+
+    const gross = Math.max(0, Math.floor((Date.now() - new Date(entry.clock_in).getTime()) / 1000));
+    setCurrentSeconds(Math.max(0, gross - breakTotal));
+    setCurrentBreakSeconds(breakTotal);
+  }, []);
+
+  const applyEntry = useCallback((entry: TimeEntry | null) => {
+    setTimeEntry(entry);
+    if (entry && entry.status === 'active') {
+      setIsWorkRunning(true);
+      setIsBreakRunning(Boolean(entry.break_start && !entry.break_end));
+      syncCounters(entry, Boolean(entry.break_start && !entry.break_end));
+    } else {
+      setIsWorkRunning(false);
+      setIsBreakRunning(false);
+      syncCounters(entry, false);
+    }
+  }, [syncCounters]);
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
@@ -101,91 +171,50 @@ export function EmployeeDashboardPage() {
       if (emp) {
         const existing = await loadTodayEntry(emp.id);
         if (existing) {
-          setTimeEntry(existing);
-          if (existing.status === 'active') {
-            setIsWorkRunning(true);
-            if (existing.clock_in) {
-              const elapsed = Math.floor((Date.now() - new Date(existing.clock_in).getTime()) / 1000);
-              setCurrentSeconds(Math.max(0, elapsed) + (existing.total_seconds || 0));
-            }
-            if (existing.break_start && !existing.break_end) {
-              setIsBreakRunning(true);
-              const breakElapsed = Math.floor((Date.now() - new Date(existing.break_start).getTime()) / 1000);
-              setCurrentBreakSeconds(Math.max(0, breakElapsed) + (existing.break_seconds || 0));
-            }
-          } else {
-            setCurrentSeconds(existing.total_seconds || 0);
-            setCurrentBreakSeconds(existing.break_seconds || 0);
-          }
+          applyEntry(existing);
         }
         await loadTodayHistory(emp.id);
+        await loadCorrections(emp.id);
       }
       setLoading(false);
     };
     init();
-  }, [loadEmployee, loadTodayEntry, loadTodayHistory]);
+  }, [loadEmployee, loadTodayEntry, loadTodayHistory, loadCorrections, applyEntry]);
 
   useEffect(() => {
-    let interval: number | null = null;
-    if (isWorkRunning && !isBreakRunning) {
-      interval = window.setInterval(() => {
-        if (timeEntry?.clock_in) {
-          const elapsed = Math.floor((Date.now() - new Date(timeEntry.clock_in).getTime()) / 1000);
-          setCurrentSeconds(Math.max(0, elapsed));
-        }
-      }, 1000);
-    }
-    return () => { if (interval) clearInterval(interval); };
-  }, [isWorkRunning, isBreakRunning, timeEntry?.clock_in]);
+    if (!isWorkRunning) return;
+    syncCounters(timeEntry, isBreakRunning);
+    const interval = window.setInterval(() => {
+      syncCounters(timeEntry, isBreakRunning);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isWorkRunning, isBreakRunning, timeEntry, syncCounters]);
 
+  // Keep the row fresh so admins see live totals. The DB trigger owns
+  // total_seconds / break_seconds — the client never writes them.
   useEffect(() => {
-    let interval: number | null = null;
-    if (isBreakRunning && timeEntry?.break_start) {
-      interval = window.setInterval(() => {
-        const elapsed = Math.floor((Date.now() - new Date(timeEntry.break_start!).getTime()) / 1000);
-        setCurrentBreakSeconds(Math.max(0, elapsed));
-      }, 1000);
-    }
-    return () => { if (interval) clearInterval(interval); };
-  }, [isBreakRunning, timeEntry?.break_start]);
-
-  useEffect(() => {
-    if (!isWorkRunning && !isBreakRunning) return;
+    if (!isWorkRunning) return;
     const saveInterval = setInterval(async () => {
-      if (timeEntry?.id && employee) {
-        const updates: Record<string, unknown> = {};
-        if (isWorkRunning) {
-          const clockIn = new Date(timeEntry.clock_in).getTime();
-          updates.total_seconds = Math.floor((Date.now() - clockIn) / 1000);
-        }
-        if (isBreakRunning && timeEntry.break_start) {
-          const breakStart = new Date(timeEntry.break_start).getTime();
-          updates.break_seconds = Math.floor((Date.now() - breakStart) / 1000);
-        }
-        if (Object.keys(updates).length > 0) {
-          await supabase.from('time_entries').update(updates).eq('id', timeEntry.id);
-        }
+      if (timeEntry?.id) {
+        await supabase
+          .from('time_entries')
+          .update({ status: 'active' })
+          .eq('id', timeEntry.id);
       }
     }, 30000);
     return () => clearInterval(saveInterval);
-  }, [isWorkRunning, isBreakRunning, timeEntry, employee]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
+  }, [isWorkRunning, timeEntry]);
 
   const handleStartWork = async () => {
     if (!employee) return;
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
 
     const { data, error } = await supabase
       .from('time_entries')
       .insert({
         company_id: employee.company_id,
         employee_id: employee.id,
-        date: today,
+        date: toLocalDateKey(now),
         clock_in: now.toISOString(),
         status: 'active',
       })
@@ -193,13 +222,19 @@ export function EmployeeDashboardPage() {
       .single();
 
     if (error) {
-      showToast(t('employees.toast.addFailed', { error: error.message }), 'error');
+      if (error.code === '23505') {
+        // Already clocked in (another tab/device): recover the active entry.
+        showToast(t('timer.alreadyClockedIn'), 'info');
+        const existing = await loadTodayEntry(employee.id);
+        if (existing) applyEntry(existing);
+        await loadTodayHistory(employee.id);
+        return;
+      }
+      showToast(t('common.errors.unexpected'), 'error');
       return;
     }
 
-    setTimeEntry(data);
-    setIsWorkRunning(true);
-    setCurrentSeconds(0);
+    applyEntry(data);
     showToast(t('timer.clockedIn'), 'success');
     await loadTodayHistory(employee.id);
   };
@@ -208,19 +243,12 @@ export function EmployeeDashboardPage() {
     if (!timeEntry || !employee) return;
 
     const now = new Date();
-    const clockIn = new Date(timeEntry.clock_in).getTime();
-    const totalSecs = Math.floor((now.getTime() - clockIn) / 1000);
+    const updates: Record<string, unknown> = { clock_out: now.toISOString() };
 
-    const updates: Record<string, unknown> = {
-      clock_out: now.toISOString(),
-      total_seconds: totalSecs,
-      status: 'completed',
-    };
-
-    if (isBreakRunning && timeEntry.break_start) {
-      const breakStart = new Date(timeEntry.break_start).getTime();
+    // Clocking out mid-break closes the break too, so the DB trigger
+    // accumulates it instead of counting it as worked time.
+    if (isBreakRunning && timeEntry.break_start && !timeEntry.break_end) {
       updates.break_end = now.toISOString();
-      updates.break_seconds = Math.floor((now.getTime() - breakStart) / 1000);
     }
 
     const { error } = await supabase
@@ -229,15 +257,14 @@ export function EmployeeDashboardPage() {
       .eq('id', timeEntry.id);
 
     if (error) {
-      showToast(t('employees.toast.addFailed', { error: error.message }), 'error');
+      showToast(t('common.errors.unexpected'), 'error');
       return;
     }
 
     setIsWorkRunning(false);
     setIsBreakRunning(false);
-    setCurrentSeconds(totalSecs);
     showToast(t('timer.clockedOut'), 'success');
-    await loadTodayEntry(employee.id);
+    applyEntry(await loadTodayEntry(employee.id));
     await loadTodayHistory(employee.id);
   };
 
@@ -245,50 +272,40 @@ export function EmployeeDashboardPage() {
     if (!timeEntry || !employee) return;
 
     const now = new Date();
-    const clockIn = new Date(timeEntry.clock_in).getTime();
-    const workElapsed = Math.floor((now.getTime() - clockIn) / 1000);
 
+    // break_end must be cleared so the trigger treats the previous break as
+    // already accumulated and the new one as open.
     const { error } = await supabase
       .from('time_entries')
       .update({
         break_start: now.toISOString(),
-        total_seconds: workElapsed,
+        break_end: null,
       })
       .eq('id', timeEntry.id);
 
     if (error) {
-      showToast(t('employees.toast.addFailed', { error: error.message }), 'error');
+      showToast(t('common.errors.unexpected'), 'error');
       return;
     }
 
-    setIsBreakRunning(true);
-    setCurrentSeconds(workElapsed);
-    setCurrentBreakSeconds(0);
+    applyEntry(await loadTodayEntry(employee.id));
     showToast(t('timer.breakStarted'), 'info');
   };
 
   const handleEndBreak = async () => {
     if (!timeEntry?.break_start || !employee) return;
 
-    const now = new Date();
-    const breakStart = new Date(timeEntry.break_start).getTime();
-    const breakSecs = Math.floor((now.getTime() - breakStart) / 1000);
-
     const { error } = await supabase
       .from('time_entries')
-      .update({
-        break_end: now.toISOString(),
-        break_seconds: breakSecs,
-      })
+      .update({ break_end: new Date().toISOString() })
       .eq('id', timeEntry.id);
 
     if (error) {
-      showToast(t('employees.toast.addFailed', { error: error.message }), 'error');
+      showToast(t('common.errors.unexpected'), 'error');
       return;
     }
 
-    setIsBreakRunning(false);
-    setCurrentBreakSeconds(breakSecs);
+    applyEntry(await loadTodayEntry(employee.id));
     showToast(t('timer.breakEnded'), 'info');
   };
 
@@ -302,8 +319,8 @@ export function EmployeeDashboardPage() {
   const handleRequestCorrection = (entry: TimeEntry) => {
     setCorrectingEntry(entry);
     setCorrectionReason('');
-    setCorrectionClockIn(new Date(entry.clock_in).toISOString().slice(0, 16));
-    setCorrectionClockOut(entry.clock_out ? new Date(entry.clock_out).toISOString().slice(0, 16) : '');
+    setCorrectionClockIn(toLocalInputValue(entry.clock_in));
+    setCorrectionClockOut(toLocalInputValue(entry.clock_out));
     setShowCorrectionModal(true);
   };
 
@@ -321,13 +338,14 @@ export function EmployeeDashboardPage() {
     });
 
     if (error) {
-      showToast(t('employees.toast.addFailed', { error: error.message }), 'error');
+      showToast(t('common.errors.unexpected'), 'error');
       return;
     }
 
     showToast(t('timer.correctionRequested'), 'success');
     setShowCorrectionModal(false);
     setCorrectingEntry(null);
+    if (employee) await loadCorrections(employee.id);
   };
 
   const formatTime = (seconds: number): string => {
@@ -355,37 +373,7 @@ export function EmployeeDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <AlarmClockIcon className="w-8 h-8 text-teal-600 dark:text-teal-400" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">PlegoHR</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-2">
-                <button onClick={() => navigate('/employee-dashboard')} className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400">
-                  {t('nav.dashboard')}
-                </button>
-                <button onClick={() => navigate('/employee-documents')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.documents')}
-                </button>
-                <button onClick={() => navigate('/employee-leave')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.leave')}
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
-              <button onClick={handleSignOut} className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
-                <LogOut className="w-5 h-5" />
-                <span className="hidden md:inline">{t('common.logout')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <TopNav role="employee" active="dashboard" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -447,7 +435,7 @@ export function EmployeeDashboardPage() {
             <div className="grid grid-cols-3 gap-4 mb-6 max-w-md mx-auto">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{t('timer.workedTime')}</p>
-                <p className="text-2xl font-bold font-mono text-teal-600 dark:text-teal-400">{formatTime(currentSeconds - currentBreakSeconds)}</p>
+                <p className="text-2xl font-bold font-mono text-teal-600 dark:text-teal-400">{formatTime(currentSeconds)}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{t('timer.pausedTime')}</p>
@@ -455,7 +443,7 @@ export function EmployeeDashboardPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{t('timer.totalTime')}</p>
-                <p className="text-2xl font-bold font-mono text-gray-900 dark:text-white">{formatTime(currentSeconds)}</p>
+                <p className="text-2xl font-bold font-mono text-gray-900 dark:text-white">{formatTime(currentSeconds + currentBreakSeconds)}</p>
               </div>
             </div>
             <button onClick={handleEndDay} className="px-12 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold text-lg">
@@ -499,7 +487,7 @@ export function EmployeeDashboardPage() {
                         </span>
                       </td>
                       <td className="py-3 px-3 text-right">
-                        {entry.status === 'completed' && (
+                        {(entry.status === 'completed' || entry.status === 'corrected') && (
                           <button
                             onClick={() => handleRequestCorrection(entry)}
                             className="text-teal-600 hover:text-teal-700 dark:text-teal-400 text-xs font-medium"
@@ -510,6 +498,49 @@ export function EmployeeDashboardPage() {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {correctionRequests.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mt-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('corrections.myRequests')}</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">{t('corrections.table.date')}</th>
+                    <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">{t('corrections.table.reason')}</th>
+                    <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">{t('corrections.table.newClockIn')}</th>
+                    <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">{t('corrections.table.newClockOut')}</th>
+                    <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">{t('corrections.table.status')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {correctionRequests.map((request) => {
+                    const entryDate = Array.isArray(request.time_entry)
+                      ? request.time_entry[0]?.date
+                      : request.time_entry?.date;
+                    return (
+                      <tr key={request.id} className="border-b border-gray-100 dark:border-gray-700/50">
+                        <td className="py-3 px-3 text-gray-900 dark:text-white">{entryDate || formatDisplayTime(request.requested_at)}</td>
+                        <td className="py-3 px-3 text-gray-600 dark:text-gray-400">{request.reason}</td>
+                        <td className="py-3 px-3 text-gray-900 dark:text-white">{formatDisplayTime(request.new_clock_in)}</td>
+                        <td className="py-3 px-3 text-gray-900 dark:text-white">{formatDisplayTime(request.new_clock_out)}</td>
+                        <td className="py-3 px-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            request.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                            request.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
+                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          }`}>
+                            {t(`common.status.${request.status}`)}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

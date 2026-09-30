@@ -30,10 +30,13 @@ Always run `lint` then `typecheck` before committing. There is no test framework
 ## Supabase
 
 - Live project at `czxkbihwjqkcrjsobuji` — `.env` already has `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-- 10 timestamped migrations in `supabase/migrations/` — run in order via `supabase db push` or SQL Editor
-  - New: `20260327000000_create_time_entries.sql` + `20260327000001_create_time_corrections.sql`
+- 14 timestamped migrations in `supabase/migrations/` — run in order via `supabase db push` or SQL Editor
+  - Latest: `20260930000000_security_hardening.sql` (RLS/Tenant hardening + invitation RPCs) and
+    `20260930000001_documents_signing.sql` (internal document signature + `sign_document` RPC)
 - 1 Deno edge function: `supabase/functions/send-employee-invitation/` (deploy: `supabase functions deploy send-employee-invitation`)
 - RLS enabled on all tables; recursion-fix migration exists
+- **Local RLS/integrity test harness**: `./supabase/tests/run_local_tests.sh` (needs Docker; spins up
+  postgres:16 + emulated auth/storage, runs `rls_and_integrity_test.sql` — 26 scenarios, must end `== ALL GREEN ==`)
 
 ## Conventions
 

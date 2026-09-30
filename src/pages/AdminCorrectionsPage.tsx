@@ -1,10 +1,8 @@
 import { useTranslation } from 'react-i18next';
+import { TopNav } from '../components/common/TopNav';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Loader2, Clock, Check, XCircle } from 'lucide-react';
-import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
-import { ThemeToggle } from '../components/common/ThemeToggle';
-import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
-import { useNavigate, Link } from 'react-router-dom';
+import { Loader2, Clock, Check, XCircle } from 'lucide-react';
+import { Toast } from '../components/common/Toast';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../config/supabase';
 
@@ -47,15 +45,16 @@ type TabType = 'pending' | 'approved' | 'rejected';
 
 export function AdminCorrectionsPage() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
+  const { user } = useAuth();
+  
   const [loading, setLoading] = useState(true);
   const [corrections, setCorrections] = useState<Correction[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('pending');
   const [reviewingCorrection, setReviewingCorrection] = useState<Correction | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const loadCorrections = useCallback(async () => {
     setLoading(true);
@@ -92,30 +91,69 @@ export function AdminCorrectionsPage() {
   }, [loadCorrections]);
 
   const handleReview = async (status: 'approved' | 'rejected') => {
-    if (!reviewingCorrection) return;
+    if (!reviewingCorrection || reviewSaving) return;
+    setReviewSaving(true);
 
-    const { error } = await supabase
-      .from('time_corrections')
-      .update({
-        status,
-        reviewed_by: user?.id,
-        reviewed_at: new Date().toISOString(),
-        review_notes: reviewNotes || null,
-      })
-      .eq('id', reviewingCorrection.id);
+    try {
+      if (status === 'approved') {
+        // Apply the requested values to the time entry FIRST, so an approval
+        // can never exist without its data change.
+        const updates: Record<string, unknown> = { status: 'corrected' };
+        if (reviewingCorrection.new_clock_in) {
+          updates.clock_in = reviewingCorrection.new_clock_in;
+        }
+        if (reviewingCorrection.new_clock_out) {
+          updates.clock_out = reviewingCorrection.new_clock_out;
+        }
+        if (reviewingCorrection.new_break_start) {
+          updates.break_start = reviewingCorrection.new_break_start;
+        }
+        if (reviewingCorrection.new_break_end) {
+          updates.break_end = reviewingCorrection.new_break_end;
+        }
 
-    if (!error) {
+        const { error: applyError } = await supabase
+          .from('time_entries')
+          .update(updates)
+          .eq('id', reviewingCorrection.time_entry_id);
+
+        if (applyError) {
+          setToast({ message: t('corrections.toast.applyFailed'), type: 'error' });
+          return;
+        }
+      }
+
+      const { error } = await supabase
+        .from('time_corrections')
+        .update({
+          status,
+          reviewed_by: user?.id,
+          reviewed_at: new Date().toISOString(),
+          review_notes: reviewNotes || null,
+        })
+        .eq('id', reviewingCorrection.id)
+        .eq('status', 'pending');
+
+      if (error) {
+        setToast({ message: t('corrections.toast.reviewFailed'), type: 'error' });
+        return;
+      }
+
+      setToast({
+        message: status === 'approved'
+          ? t('corrections.toast.approved')
+          : t('corrections.toast.rejected'),
+        type: 'success',
+      });
       setShowReviewModal(false);
       setReviewingCorrection(null);
       setReviewNotes('');
-      loadCorrections();
+      await loadCorrections();
+    } finally {
+      setReviewSaving(false);
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
 
   const formatTime = (timestamp: string | null) => {
     if (!timestamp) return '-';
@@ -148,47 +186,7 @@ export function AdminCorrectionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <AlarmClockIcon className="w-8 h-8 text-teal-600 dark:text-teal-400" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">PlegoHR</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-2">
-                <button onClick={() => navigate('/dashboard')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.dashboard')}
-                </button>
-                <button onClick={() => navigate('/documents')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.documents')}
-                </button>
-                <button onClick={() => navigate('/leave')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.leave')}
-                </button>
-                <button onClick={() => navigate('/time-tracking')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.timeTracking')}
-                </button>
-                <button onClick={() => navigate('/time-corrections')} className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400">
-                  {t('nav.timeCorrections')}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="hidden md:inline">{t('common.logout')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <TopNav role="admin" active="time-corrections" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -381,14 +379,16 @@ export function AdminCorrectionsPage() {
               </button>
               <button
                 onClick={() => handleReview('rejected')}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                disabled={reviewSaving}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
                 <XCircle className="w-5 h-5" />
                 {t('common.reject')}
               </button>
               <button
                 onClick={() => handleReview('approved')}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                disabled={reviewSaving}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
                 <Check className="w-5 h-5" />
                 {t('common.approve')}
@@ -396,6 +396,10 @@ export function AdminCorrectionsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
     </div>
   );

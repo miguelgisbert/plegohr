@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { TopNav } from '../components/common/TopNav';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Loader2, Clock, Users, FileText } from 'lucide-react';
-import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
-import { ThemeToggle } from '../components/common/ThemeToggle';
-import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
-import { useNavigate, Link } from 'react-router-dom';
+import { Loader2, Clock, Users, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,  } from 'recharts';
+import type { PDFLabels } from '../components/reports/TimeReportPDF';
+import { Toast } from '../components/common/Toast';
+import { Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../config/supabase';
 
@@ -29,17 +30,45 @@ interface TimeEntry {
   employee?: Employee;
 }
 
+type Period = 'day' | 'week' | 'month';
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const toKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseKey = (key: string) => {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const startOfWeek = (d: Date) => addDays(d, -((d.getDay() + 6) % 7)); // Monday
+const rangeFor = (period: Period, anchor: string): { start: string; end: string } => {
+  const d = parseKey(anchor);
+  if (period === 'day') return { start: toKey(d), end: toKey(d) };
+  if (period === 'week') {
+    const from = startOfWeek(d);
+    return { start: toKey(from), end: toKey(addDays(from, 6)) };
+  }
+  return {
+    start: toKey(new Date(d.getFullYear(), d.getMonth(), 1)),
+    end: toKey(new Date(d.getFullYear(), d.getMonth() + 1, 0)),
+  };
+};
+
 export function AdminTimeTrackingPage() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
+  const { user } = useAuth();
+  
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [pendingCorrections, setPendingCorrections] = useState<Set<string>>(new Set());
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [period, setPeriod] = useState<Period>('day');
+  const [anchorDate, setAnchorDate] = useState(toKey(new Date()));
   const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const { start: dateFrom, end: dateTo } = rangeFor(period, anchorDate);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -64,6 +93,13 @@ export function AdminTimeTrackingPage() {
       setEmployees(employeesData);
     }
 
+    const { data: companyData } = await supabase
+      .from('companies')
+      .select('name')
+      .eq('id', userRecord.company_id)
+      .maybeSingle();
+    setCompanyName(companyData?.name || '');
+
     let query = supabase
       .from('time_entries')
       .select(`
@@ -71,7 +107,8 @@ export function AdminTimeTrackingPage() {
         employee:employees(id, full_name, email, position)
       `)
       .eq('company_id', userRecord.company_id)
-      .eq('date', selectedDate)
+      .gte('date', dateFrom)
+      .lte('date', dateTo)
       .order('clock_in', { ascending: true });
 
     if (selectedEmployee) {
@@ -95,15 +132,62 @@ export function AdminTimeTrackingPage() {
     }
 
     setLoading(false);
-  }, [selectedDate, selectedEmployee, user?.id]);
+  }, [dateFrom, dateTo, selectedEmployee, user?.id]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+
+  const handleDownloadPdf = async () => {
+    if (pdfGenerating) return;
+
+    const targets = employees.filter((emp) =>
+      todayEntries.some((entry) => entry.employee_id === emp.id),
+    );
+
+    if (targets.length === 0) {
+      setToast({ message: t('timeTracking.pdf.empty'), type: 'info' });
+      return;
+    }
+
+    const labels: PDFLabels = {
+      reportTitle: t('timeTracking.pdf.reportTitle'),
+      date: t('timeTracking.filters.date'),
+      clockIn: t('timeTracking.table.clockIn'),
+      clockOut: t('timeTracking.table.clockOut'),
+      breakStart: t('timeTracking.table.breakStart'),
+      breakEnd: t('timeTracking.table.breakEnd'),
+      totalWork: t('timeTracking.table.totalWork'),
+      totalBreak: t('timeTracking.table.totalBreak'),
+      employee: t('timeTracking.table.employee'),
+      period: t('timeTracking.pdf.period'),
+      generatedBy: t('timeTracking.pdf.generatedBy'),
+      total: t('timeTracking.pdf.total'),
+    };
+
+    setPdfGenerating(true);
+    try {
+      // Load the PDF engine on demand: it is by far the heaviest dependency.
+      const { downloadTimeReportPDF } = await import('../utils/pdfGenerator');
+      for (const employee of targets) {
+        const entries = todayEntries.filter((entry) => entry.employee_id === employee.id);
+        await downloadTimeReportPDF(
+          employee.full_name,
+          companyName || 'PlegoHR',
+          entries,
+          dateFrom,
+          dateTo,
+          labels,
+        );
+      }
+      setToast({ message: t('timeTracking.pdf.success'), type: 'success' });
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      setToast({ message: t('timeTracking.pdf.failed'), type: 'error' });
+    } finally {
+      setPdfGenerating(false);
+    }
   };
 
   const formatSeconds = (seconds: number) => {
@@ -122,6 +206,26 @@ export function AdminTimeTrackingPage() {
   const employeesToday = new Set(todayEntries.map((e) => e.employee_id)).size;
   const clockedIn = todayEntries.filter((e) => e.status === 'active' && !e.clock_out).length;
   const totalSecondsToday = todayEntries.reduce((sum, e) => sum + (e.total_seconds || 0), 0);
+
+  const chartData = Array.from(
+    todayEntries.reduce((acc, entry) => {
+      const name = entry.employee?.full_name || '—';
+      acc.set(name, (acc.get(name) || 0) + (entry.total_seconds || 0));
+      return acc;
+    }, new Map<string, number>()),
+  )
+    .map(([name, seconds]) => ({
+      name,
+      hours: Math.round((seconds / 3600) * 100) / 100,
+    }))
+    .sort((a, b) => b.hours - a.hours);
+
+  const shiftAnchor = (direction: 1 | -1) => {
+    const d = parseKey(anchorDate);
+    if (period === 'day') setAnchorDate(toKey(addDays(d, direction)));
+    else if (period === 'week') setAnchorDate(toKey(addDays(d, 7 * direction)));
+    else setAnchorDate(toKey(new Date(d.getFullYear(), d.getMonth() + direction, 1)));
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -159,44 +263,7 @@ export function AdminTimeTrackingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <AlarmClockIcon className="w-8 h-8 text-teal-600 dark:text-teal-400" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">PlegoHR</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-2">
-                <button onClick={() => navigate('/dashboard')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.dashboard')}
-                </button>
-                <button onClick={() => navigate('/documents')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.documents')}
-                </button>
-                <button onClick={() => navigate('/leave')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.leave')}
-                </button>
-                <button onClick={() => navigate('/time-tracking')} className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400">
-                  {t('nav.timeTracking')}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="hidden md:inline">{t('common.logout')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <TopNav role="admin" active="time-tracking" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -224,16 +291,73 @@ export function AdminTimeTrackingPage() {
           ))}
         </div>
 
+        {chartData.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              {t('timeTracking.chart.title')}
+            </h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 4 }}>
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    formatter={(value) => [`${value} h`, t('timeTracking.chart.hours')]}
+                    contentStyle={{ borderRadius: 8 }}
+                  />
+                  <Bar dataKey="hours" fill="#0d9488" radius={[0, 6, 6, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                />
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+                  {(['day', 'week', 'month'] as Period[]).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setPeriod(value)}
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${
+                        period === value
+                          ? 'bg-teal-600 text-white'
+                          : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {t(`timeTracking.period.${value}`)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => shiftAnchor(-1)}
+                    aria-label={t('timeTracking.previousPeriod')}
+                    className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="date"
+                    value={anchorDate}
+                    onChange={(e) => e.target.value && setAnchorDate(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => shiftAnchor(1)}
+                    aria-label={t('timeTracking.nextPeriod')}
+                    className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
                 <select
                   value={selectedEmployee}
                   onChange={(e) => setSelectedEmployee(e.target.value)}
@@ -246,11 +370,12 @@ export function AdminTimeTrackingPage() {
                 </select>
               </div>
               <button
-                onClick={() => {}}
-                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                onClick={handleDownloadPdf}
+                disabled={pdfGenerating}
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FileText className="w-5 h-5" />
-                {t('timeTracking.downloadPdf')}
+                {pdfGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
+                {pdfGenerating ? t('timeTracking.pdf.preparing') : t('timeTracking.downloadPdf')}
               </button>
             </div>
           </div>
@@ -271,6 +396,11 @@ export function AdminTimeTrackingPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
+                    {period !== 'day' && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        {t('timeTracking.filters.date')}
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       {t('timeTracking.table.employee')}
                     </th>
@@ -300,6 +430,11 @@ export function AdminTimeTrackingPage() {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {todayEntries.map((entry) => (
                     <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      {period !== 'day' && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                          {entry.date}
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {entry.employee?.full_name}
@@ -349,6 +484,10 @@ export function AdminTimeTrackingPage() {
           )}
         </div>
       </main>
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
     </div>
   );
 }

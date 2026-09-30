@@ -171,7 +171,7 @@ export function PreviewCompanyDocumentsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{doc.employee_name}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${DOCUMENT_TYPE_COLORS[doc.document_type] || DOCUMENT_TYPE_COLORS.other}`}>
-                        {t(`documents.types.${doc.document_type}` as any, { defaultValue: doc.document_type })}
+                        {t(`documents.types.${doc.document_type}`, { defaultValue: doc.document_type })}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{formatFileSize(doc.file_size)}</td>

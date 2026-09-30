@@ -1,13 +1,14 @@
 import { useTranslation } from 'react-i18next';
+import { TopNav } from '../components/common/TopNav';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Upload, FileText, Trash2, Download, Search } from 'lucide-react';
-import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
-import { ThemeToggle } from '../components/common/ThemeToggle';
-import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
-import { useNavigate, Link } from 'react-router-dom';
+import { Upload, FileText, Trash2, Download, Search, Eye, X, FileSignature } from 'lucide-react';
+import { Toast } from '../components/common/Toast';
 import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import { isNetworkError } from '../utils/errorUtils';
+
+const ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg'];
+const MAX_FILE_SIZE_MB = 10;
 
 interface Employee {
   id: string;
@@ -26,14 +27,15 @@ interface Document {
   document_type: string;
   uploaded_at: string;
   description: string | null;
+  requires_signature: boolean;
+  signed_at: string | null;
   employee?: Employee;
 }
 
 export function CompanyDocumentsPage() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
+  const { user } = useAuth();
+  
   const [documents, setDocuments] = useState<Document[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
@@ -44,7 +46,12 @@ export function CompanyDocumentsPage() {
     document_type: 'contract',
     description: '',
     file: null as File | null,
+    requires_signature: false,
   });
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
     loadEmployees();
@@ -90,7 +97,7 @@ export function CompanyDocumentsPage() {
       .order('uploaded_at', { ascending: false });
 
     if (!error && data) {
-      setDocuments(data as any);
+      setDocuments(data as unknown as Document[]);
     }
   };
 
@@ -100,9 +107,26 @@ export function CompanyDocumentsPage() {
     }
   };
 
+  const validateFile = (file: File): string | null => {
+    const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      return t('documents.errors.invalidFileType');
+    }
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      return t('documents.errors.fileTooLarge');
+    }
+    return null;
+  };
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadForm.file || !uploadForm.employee_id) return;
+
+    const validationError = validateFile(uploadForm.file);
+    if (validationError) {
+      setToast({ message: validationError, type: 'error' });
+      return;
+    }
 
     setIsUploading(true);
 
@@ -139,6 +163,7 @@ export function CompanyDocumentsPage() {
           document_type: uploadForm.document_type,
           description: uploadForm.description || null,
           uploaded_by: user?.id,
+          requires_signature: uploadForm.requires_signature,
         });
 
       if (insertError) throw insertError;
@@ -148,18 +173,20 @@ export function CompanyDocumentsPage() {
         document_type: 'contract',
         description: '',
         file: null,
+        requires_signature: false,
       });
 
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
 
+      setToast({ message: t('documents.toast.uploaded'), type: 'success' });
       loadDocuments();
     } catch (error) {
       console.error('Upload error:', error);
       if (isNetworkError(error)) {
         alert(t('common.errors.networkError'));
       } else {
-        alert(t('documents.toast.uploadFailed', { error: String(error) }));
+        alert(t('common.errors.unexpected'));
       }
     } finally {
       setIsUploading(false);
@@ -189,7 +216,7 @@ export function CompanyDocumentsPage() {
       if (isNetworkError(error)) {
         alert(t('common.errors.networkError'));
       } else {
-        alert(t('documents.toast.deleteFailed', { error: String(error) }));
+        alert(t('common.errors.unexpected'));
       }
     }
   };
@@ -215,10 +242,54 @@ export function CompanyDocumentsPage() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+  const handlePreview = async (doc: Document) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(doc.file_path, 3600);
+
+      if (error) throw error;
+
+      setPreviewDoc(doc);
+      setPreviewUrl(data.signedUrl);
+    } catch (error) {
+      console.error('Preview error:', error);
+      setToast({ message: t('documents.errors.previewFailed'), type: 'error' });
+    }
   };
+
+  const closePreview = () => {
+    setPreviewDoc(null);
+    setPreviewUrl(null);
+  };
+
+  const handleToggleSignature = async (doc: Document) => {
+    if (doc.signed_at) return;
+
+    setTogglingId(doc.id);
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ requires_signature: !doc.requires_signature })
+        .eq('id', doc.id)
+        .eq('signed_at', null);
+
+      if (error) throw error;
+
+      setToast({ message: t('documents.toast.signatureUpdated'), type: 'success' });
+      await loadDocuments();
+    } catch (error) {
+      console.error('Toggle signature error:', error);
+      if (isNetworkError(error)) {
+        setToast({ message: t('common.errors.networkError'), type: 'error' });
+      } else {
+        setToast({ message: t('documents.toast.signatureUpdateFailed'), type: 'error' });
+      }
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
 
   const filteredDocuments = documents.filter((doc) => {
     const matchesEmployee = !selectedEmployee || doc.employee_id === selectedEmployee;
@@ -234,6 +305,9 @@ export function CompanyDocumentsPage() {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   };
 
+  const signatureStatus = (doc: Document): 'signed' | 'pending' | 'none' =>
+    doc.signed_at ? 'signed' : doc.requires_signature ? 'pending' : 'none';
+
   const documentTypes = [
     { value: 'contract', label: t('documents.types.contract') },
     { value: 'payslip', label: t('documents.types.payslip') },
@@ -244,41 +318,7 @@ export function CompanyDocumentsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <AlarmClockIcon className="w-8 h-8 text-teal-600 dark:text-teal-400" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">PlegoHR</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-2">
-                <button onClick={() => navigate('/dashboard')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.dashboard')}
-                </button>
-                <button onClick={() => navigate('/documents')} className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400">
-                  {t('nav.documents')}
-                </button>
-                <button onClick={() => navigate('/leave')} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                  {t('nav.leave')}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="hidden md:inline">{t('common.logout')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <TopNav role="admin" active="documents" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -345,10 +385,26 @@ export function CompanyDocumentsPage() {
               <input
                 type="file"
                 onChange={handleFileChange}
+                accept=".pdf,.png,.jpg,.jpeg"
                 required
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-teal-50 dark:file:bg-teal-900/20 file:text-teal-700 dark:file:text-teal-400 file:cursor-pointer"
               />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {t('documents.uploadModal.fileHint', { max: MAX_FILE_SIZE_MB })}
+              </p>
             </div>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={uploadForm.requires_signature}
+                onChange={(e) => setUploadForm({ ...uploadForm, requires_signature: e.target.checked })}
+                className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('documents.uploadModal.requireSignature')}
+              </span>
+            </label>
 
             <button
               type="submit"
@@ -407,7 +463,7 @@ export function CompanyDocumentsPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    {[t('documents.columns.employee'), t('documents.columns.document'), t('documents.columns.type'), t('documents.columns.size'), t('documents.columns.date'), t('documents.columns.actions')].map((h, i) => (
+                    {[t('documents.columns.employee'), t('documents.columns.document'), t('documents.columns.type'), t('documents.columns.size'), t('documents.columns.date'), t('documents.columns.status'), t('documents.columns.actions')].map((h, i) => (
                       <th key={i} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
@@ -427,7 +483,7 @@ export function CompanyDocumentsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="px-2 py-1 text-xs font-semibold rounded-full bg-teal-100 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400">
-                          {t(`documents.types.${doc.document_type}` as any, { defaultValue: doc.document_type })}
+                          {t(`documents.types.${doc.document_type}`, { defaultValue: doc.document_type })}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
@@ -436,8 +492,48 @@ export function CompanyDocumentsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                         {new Date(doc.uploaded_at).toLocaleDateString()}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {signatureStatus(doc) === 'signed' ? (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
+                            {t('documents.status.signed')}
+                          </span>
+                        ) : signatureStatus(doc) === 'pending' ? (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400">
+                            {t('documents.status.pending')}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                            {t('documents.status.notRequired')}
+                          </span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handlePreview(doc)}
+                            className="p-2 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+                            title={t('common.preview')}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          {!doc.signed_at && (
+                            <button
+                              onClick={() => handleToggleSignature(doc)}
+                              disabled={togglingId === doc.id}
+                              className={`p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                doc.requires_signature
+                                  ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                              }`}
+                              title={
+                                doc.requires_signature
+                                  ? t('documents.actions.signatureOptional')
+                                  : t('documents.actions.requireSignature')
+                              }
+                            >
+                              <FileSignature className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDownload(doc)}
                             className="p-2 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
@@ -462,6 +558,71 @@ export function CompanyDocumentsPage() {
           )}
         </div>
       </main>
+
+      {previewDoc && previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={closePreview}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {previewDoc.file_name}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {previewDoc.employee?.full_name} — {t(`documents.types.${previewDoc.document_type}`, { defaultValue: previewDoc.document_type })}
+                </p>
+              </div>
+              <button
+                onClick={closePreview}
+                className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title={t('common.close')}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-auto flex-1">
+              {previewDoc.file_type.startsWith('image/') ? (
+                <img
+                  src={previewUrl}
+                  alt={previewDoc.file_name}
+                  className="mx-auto max-h-[70vh] rounded"
+                />
+              ) : previewDoc.file_type === 'application/pdf' || previewDoc.file_name.toLowerCase().endsWith('.pdf') ? (
+                <iframe
+                  src={previewUrl}
+                  title={previewDoc.file_name}
+                  className="w-full h-[70vh] rounded border-0"
+                />
+              ) : (
+                <div className="p-8 text-center">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t('documents.errors.previewNotSupported')}
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => handleDownload(previewDoc)}
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
+              >
+                <Download className="w-4 h-4" />
+                {t('common.download')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
     </div>
   );
 }

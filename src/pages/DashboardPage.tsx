@@ -1,25 +1,10 @@
-import { useTranslation } from "react-i18next";
-import { useAuth } from "../contexts/AuthContext";
-import {
-  Clock,
-  FileText,
-  BarChart3,
-  Users,
-  LogOut,
-  Plus,
-  Pencil,
-  Trash2,
-  Send,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import { LanguageSwitcher } from "../components/common/LanguageSwitcher";
-import { ThemeToggle } from "../components/common/ThemeToggle";
-import { AlarmClockIcon } from "../components/common/AlarmClockIcon";
-import { Toast } from "../components/common/Toast";
-import { useNavigate, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { supabase } from "../config/supabase";
+import { useTranslation } from 'react-i18next';
+import { TopNav } from '../components/common/TopNav';
+import { useAuth } from '../contexts/AuthContext';
+import { Clock, FileText, BarChart3, Users, Plus, Pencil, Trash2, Send,  } from 'lucide-react';
+import { Toast } from '../components/common/Toast';
+import { useState, useEffect } from 'react';
+import { supabase } from '../config/supabase';
 
 interface Company {
   id: string;
@@ -42,9 +27,8 @@ interface ToastMessage {
 
 export function DashboardPage() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const [company, setCompany] = useState<Company | null>(null);
+  const { user } = useAuth();
+    const [company, setCompany] = useState<Company | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [timeStats, setTimeStats] = useState({ hoursToday: 0, hoursWeek: 0 });
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -134,18 +118,9 @@ export function DashboardPage() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
-
   const showToast = (message: string, type: "success" | "error" | "info") => {
     setToast({ message, type });
   };
-
-  const [showCredentials, setShowCredentials] = useState(false);
-  const [credentials, setCredentials] = useState<{ email: string; password: string; loginUrl: string } | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
 
   const sendInvitationEmail = async (employeeId: string, email: string) => {
     if (!company) {
@@ -204,12 +179,11 @@ export function DashboardPage() {
 
       try {
         const result = await sendInvitationEmail(employeeData.id, inviteData.email);
-        if (result.credentials) {
-          setCredentials(result.credentials);
-          setShowPassword(false);
-          setShowCredentials(true);
+        if (result?.delivery === "sent") {
+          showToast(t("employees.toast.added"), "success");
+        } else {
+          showToast(t("employees.toast.emailNotSent"), "info");
         }
-        showToast(t("employees.toast.added"), "success");
       } catch (invitationError) {
         console.error("Error sending invitation email:", invitationError);
         showToast(t("employees.toast.invitationFailed"), "error");
@@ -253,7 +227,7 @@ export function DashboardPage() {
 
       if (error) {
         showToast(
-          t("employees.toast.updateFailed", { error: error.message }),
+          t("common.errors.unexpected"),
           "error",
         );
         return;
@@ -283,7 +257,7 @@ export function DashboardPage() {
 
       if (error) {
         showToast(
-          t("employees.toast.deleteFailed", { error: error.message }),
+          t("common.errors.unexpected"),
           "error",
         );
         return;
@@ -304,8 +278,12 @@ export function DashboardPage() {
     }
 
     try {
-      await sendInvitationEmail(employee.id, employee.email);
-      showToast(t("employees.toast.invitationSent"), "success");
+      const result = await sendInvitationEmail(employee.id, employee.email);
+      if (result?.delivery === "sent") {
+        showToast(t("employees.toast.invitationSent"), "success");
+      } else {
+        showToast(t("employees.toast.emailNotSent"), "info");
+      }
     } catch (err) {
       console.error("Error resending invitation email:", err);
       showToast(t("employees.toast.sendFailed"), "error");
@@ -376,55 +354,7 @@ export function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-6">
-              <Link
-                to="/"
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-              >
-                <AlarmClockIcon className="w-8 h-8 text-teal-600 dark:text-teal-400" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  PlegoHR
-                </span>
-              </Link>
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => navigate("/dashboard")}
-                  className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400"
-                >
-                  {t("nav.dashboard")}
-                </button>
-                <button
-                  onClick={() => navigate("/documents")}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  {t("nav.documents")}
-                </button>
-                <button
-                  onClick={() => navigate("/leave")}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  {t("nav.leave")}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="hidden md:inline">{t("common.logout")}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <TopNav role="admin" active="dashboard" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -665,58 +595,6 @@ export function DashboardPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {showCredentials && credentials && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              {t("employees.credentialsTitle")}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {t("employees.credentialsDescription")}
-            </p>
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">{t("common.email")}</label>
-                <p className="text-gray-900 dark:text-white font-mono">{credentials.email}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">{t("common.password")}</label>
-                <div className="flex items-center gap-2">
-                  <p className="text-gray-900 dark:text-white font-mono flex-1">
-                    {showPassword ? credentials.password : "••••••••••••••••"}
-                  </p>
-                  <button
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(credentials.password);
-                      showToast(t("common.copied"), "success");
-                    }}
-                    className="text-sm text-teal-600 hover:text-teal-700"
-                  >
-                    {t("common.copy")}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">{t("common.loginUrl")}</label>
-                <p className="text-gray-900 dark:text-white font-mono text-sm">{credentials.loginUrl}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowCredentials(false)}
-              className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
-            >
-              {t("common.close")}
-            </button>
           </div>
         </div>
       )}

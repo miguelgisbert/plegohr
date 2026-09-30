@@ -1,24 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../config/supabase";
 import { AlarmClockIcon } from "../components/common/AlarmClockIcon";
-import { CheckCircle, XCircle, Eye, EyeOff } from "lucide-react";
+import { CheckCircle, XCircle, Eye, EyeOff, Mail } from "lucide-react";
 
 interface InvitationData {
-  id: string;
   email: string;
+  employee_name: string;
+  company_name: string;
   status: string;
   expires_at: string;
-  employee_id: string;
 }
+
+const PENDING_TOKEN_KEY = "plegohr.pendingInvitationToken";
 
 export function AcceptInvitationPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get("token");
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
+  const [token] = useState(
+    () => searchParams.get("token") ?? localStorage.getItem(PENDING_TOKEN_KEY),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -26,76 +30,156 @@ export function AcceptInvitationPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [emailPending, setEmailPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  useEffect(() => {
-    if (token) {
-      loadInvitation();
-    } else {
-      setError(t("invitation.error.invalidLink"));
+  const mapAcceptError = useCallback(
+    (message: string): string => {
+      if (message.includes("invitation_expired")) {
+        return t("invitation.error.expired");
+      }
+      if (message.includes("invitation_email_mismatch")) {
+        return t("invitation.error.emailMismatch");
+      }
+      if (
+        message.includes("invitation_invalid") ||
+        message.includes("invitation_already_used")
+      ) {
+        return t("invitation.error.notFound");
+      }
+      return t("invitation.error.unexpected");
+    },
+    [t],
+  );
+
+  const acceptInvitation = useCallback(
+    async (activeToken: string) => {
+      const { error: rpcError } = await supabase.rpc("accept_invitation", {
+        p_token: activeToken,
+      });
+
+      if (rpcError) {
+        console.error("accept_invitation failed:", rpcError);
+        setError(mapAcceptError(rpcError.message));
+        setLoading(false);
+        setProcessing(false);
+        return;
+      }
+
+      localStorage.removeItem(PENDING_TOKEN_KEY);
+      setSuccess(true);
+      setProcessing(false);
       setLoading(false);
-    }
-  }, [token]);
+      setTimeout(() => navigate("/employee-dashboard"), 2000);
+    },
+    [mapAcceptError, navigate],
+  );
 
-  const loadInvitation = async () => {
-    try {
-      const { data, error: invitationError } = await supabase
-        .from("employee_invitations")
-        .select("*")
-        .eq("token", token)
-        .eq("status", "pending")
-        .maybeSingle();
+  useEffect(() => {
+    let cancelled = false;
 
-      if (invitationError || !data) {
-        setError(t("invitation.error.notFound"));
+    const init = async () => {
+      const activeToken = token;
+      if (!activeToken) {
+        setError(t("invitation.error.invalidLink"));
         setLoading(false);
         return;
       }
 
-      const expiresAt = new Date(data.expires_at);
-      if (expiresAt < new Date()) {
+      // Already signed in (fresh signUp or confirmation-link return):
+      // finish the acceptance directly.
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!cancelled && sessionData.session) {
+        await acceptInvitation(activeToken);
+        return;
+      }
+
+      const { data, error: rpcError } = await supabase.rpc(
+        "get_invitation_by_token",
+        { p_token: activeToken },
+      );
+
+      if (cancelled) return;
+
+      const row = (Array.isArray(data) ? data[0] : data) as unknown as
+        | InvitationData
+        | undefined;
+
+      if (rpcError || !row) {
+        setError(t("invitation.error.notFound"));
+        setLoading(false);
+        return;
+      }
+      if (row.status !== "pending") {
+        setError(t("invitation.error.notFound"));
+        setLoading(false);
+        return;
+      }
+      if (new Date(row.expires_at) < new Date()) {
         setError(t("invitation.error.expired"));
         setLoading(false);
         return;
       }
 
-      setInvitation(data);
+      setInvitation(row);
       setLoading(false);
-    } catch (err) {
-      console.error("Error loading invitation:", err);
-      setError(t("invitation.error.notFound"));
-      setLoading(false);
-    }
-  };
+    };
+
+    init();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAcceptInvitation = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
+    if (!token || !invitation) return;
+
     if (password !== confirmPassword) {
       setFormError(t("invitation.error.passwordMismatch"));
       return;
     }
-
     if (password.length < 6) {
       setFormError(t("invitation.error.passwordTooShort"));
       return;
     }
 
-    if (!invitation) return;
-
     setProcessing(true);
 
     try {
-      const { data: authData, error: signUpError } = await supabase.auth.signUp(
-        {
-          email: invitation.email,
-          password: password,
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: invitation.email,
+        password,
+        options: {
+          data: { full_name: invitation.employee_name },
+          emailRedirectTo: `${window.location.origin}/accept-invitation?token=${token}`,
         },
-      );
+      });
 
       if (signUpError) {
+        const message = signUpError.message.toLowerCase();
+        if (
+          message.includes("already registered") ||
+          message.includes("already been registered") ||
+          signUpError.status === 422
+        ) {
+          // Account already exists: try to sign in with the provided password.
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: invitation.email,
+            password,
+          });
+          if (signInError) {
+            setFormError(t("invitation.error.accountExists"));
+            setProcessing(false);
+            return;
+          }
+          await acceptInvitation(token);
+          return;
+        }
         setFormError(
           t("invitation.error.createFailed", { message: signUpError.message }),
         );
@@ -103,58 +187,16 @@ export function AcceptInvitationPage() {
         return;
       }
 
-      if (!authData.user) {
-        setFormError(t("invitation.error.createAccountFailed"));
+      if (!authData.session) {
+        // Email confirmation is enabled: remember the token and wait for
+        // the confirmation link that returns to this page.
+        localStorage.setItem(PENDING_TOKEN_KEY, token);
+        setEmailPending(true);
         setProcessing(false);
         return;
       }
 
-      // Wait a bit for the profile to be created by the trigger
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const { error: updateInvitationError } = await supabase
-        .from("employee_invitations")
-        .update({
-          status: "accepted",
-          accepted_at: new Date().toISOString(),
-        })
-        .eq("id", invitation.id);
-
-      if (updateInvitationError) {
-        console.error("Error updating invitation:", updateInvitationError);
-      }
-
-      const { error: updateEmployeeError } = await supabase
-        .from("employees")
-        .update({ user_id: authData.user.id })
-        .eq("id", invitation.employee_id);
-
-      if (updateEmployeeError) {
-        console.error("Error linking employee:", updateEmployeeError);
-      }
-
-      // Get the employee's company_id to set in profile
-      const { data: employeeData } = await supabase
-        .from('employees')
-        .select('company_id')
-        .eq('id', invitation.employee_id)
-        .maybeSingle();
-
-      if (employeeData) {
-        const { error: updateUserError } = await supabase
-          .from('users')
-          .update({
-            type: 'employee',
-            company_id: employeeData.company_id,
-          })
-          .eq('id', authData.user.id);
-
-        if (updateUserError) {
-          console.error('Error updating user record:', updateUserError);
-        }
-      }
-
-      setSuccess(true);
+      await acceptInvitation(token);
     } catch (err) {
       console.error("Unexpected error:", err);
       setFormError(t("invitation.error.unexpected"));
@@ -185,10 +227,10 @@ export function AcceptInvitationPage() {
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/login")}
             className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
           >
-            {t("invitation.goHome")}
+            {t("invitation.signIn")}
           </button>
         </div>
       </div>
@@ -203,9 +245,37 @@ export function AcceptInvitationPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             {t("common.success")}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {t("invitation.success")}
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {t("invitation.successAccepted")}
           </p>
+          <button
+            onClick={() => navigate("/employee-dashboard")}
+            className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            {t("invitation.goToDashboard")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (emailPending) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <Mail className="w-16 h-16 text-teal-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            {t("invitation.emailPendingTitle")}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {t("invitation.emailPendingText", { email: invitation?.email })}
+          </p>
+          <button
+            onClick={() => navigate("/login")}
+            className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            {t("invitation.signIn")}
+          </button>
         </div>
       </div>
     );
@@ -220,7 +290,9 @@ export function AcceptInvitationPage() {
             {t("invitation.title")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {t("invitation.subtitle")}
+            {t("invitation.subtitleWithCompany", {
+              company: invitation?.company_name,
+            })}
           </p>
         </div>
 

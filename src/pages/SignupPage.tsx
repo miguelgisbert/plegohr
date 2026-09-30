@@ -69,7 +69,7 @@ export function SignupPage() {
       const result = await signUp(formData.email, formData.password, formData.fullName, formData.companyName);
       setSuccess(result.requiresEmailConfirmation ? t('auth.signup.success.checkEmail') : t('auth.signup.success.redirecting'));
       setLoading(false);
-    } catch (err: any) {
+    } catch (err) {
       setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.signup.errors.createFailed'));
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export function SignupPage() {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-    } catch (err: any) {
+    } catch (err) {
       setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.login.errors.googleSignInFailed'));
     }
   };
@@ -86,7 +86,7 @@ export function SignupPage() {
   const handleLinkedInSignIn = async () => {
     try {
       await signInWithLinkedIn();
-    } catch (err: any) {
+    } catch (err) {
       setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.login.errors.linkedinSignInFailed'));
     }
   };

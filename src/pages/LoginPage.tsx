@@ -9,7 +9,7 @@ import { getErrorMessage } from '../utils/errorUtils';
 
 export function LoginPage() {
   const { t } = useTranslation();
-  const { signIn, signInWithGoogle, signInWithLinkedIn, role } = useAuth();
+  const { signIn, signInWithGoogle, signInWithLinkedIn } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,20 +23,15 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      await signIn(email, password);
-      // The role will be loaded by AuthContext, but we need a small delay
-      // to ensure the profile is loaded before redirecting
-      setTimeout(() => {
-        // Redirection will be handled by checking role in useEffect below
-        // For now, redirect based on the current role state
-        if (role === 'admin') {
-          navigate('/dashboard');
-        } else if (role === 'employee') {
-          navigate('/employee-dashboard');
-        }
-        // If role is null, stay on login (will be caught by ProtectedRoute)
-      }, 500);
-    } catch (err: any) {
+      const signedInRole = await signIn(email, password);
+      if (signedInRole === 'admin') {
+        navigate('/dashboard');
+      } else if (signedInRole === 'employee') {
+        navigate('/employee-dashboard');
+      }
+      // role null (no company yet): stay on login, ProtectedRoute guards the rest
+      setLoading(false);
+    } catch (err) {
       setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.login.errors.signInFailed'));
       setLoading(false);
     }
@@ -45,7 +40,7 @@ export function LoginPage() {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-    } catch (err: any) {
+    } catch (err) {
       setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.login.errors.googleSignInFailed'));
     }
   };
@@ -53,7 +48,7 @@ export function LoginPage() {
   const handleLinkedInSignIn = async () => {
     try {
       await signInWithLinkedIn();
-    } catch (err: any) {
+    } catch (err) {
       setError(getErrorMessage(err, t, 'common.errors.networkError', 'auth.login.errors.linkedinSignInFailed'));
     }
   };

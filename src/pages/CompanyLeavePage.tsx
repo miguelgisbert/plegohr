@@ -1,10 +1,7 @@
 import { useTranslation } from 'react-i18next';
+import { TopNav } from '../components/common/TopNav';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Plus, X, Check, XCircle, Calendar, Tag, Pencil, Trash2 } from 'lucide-react';
-import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
-import { ThemeToggle } from '../components/common/ThemeToggle';
-import { AlarmClockIcon } from '../components/common/AlarmClockIcon';
-import { useNavigate, Link } from 'react-router-dom';
+import { Plus, Check, XCircle, Calendar, Tag, Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 
@@ -34,9 +31,8 @@ interface LeaveRequest {
 
 export function CompanyLeavePage() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
+  const { user } = useAuth();
+  
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [showTypeModal, setShowTypeModal] = useState(false);
@@ -92,7 +88,7 @@ export function CompanyLeavePage() {
       .order('requested_at', { ascending: false });
 
     if (!error && data) {
-      setLeaveRequests(data as any);
+      setLeaveRequests(data as unknown as LeaveRequest[]);
     }
   };
 
@@ -166,11 +162,6 @@ export function CompanyLeavePage() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
-
   const filteredRequests = leaveRequests.filter((req) => {
     if (!filterStatus) return true;
     return req.status === filterStatus;
@@ -189,50 +180,7 @@ export function CompanyLeavePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <AlarmClockIcon className="w-8 h-8 text-teal-600 dark:text-teal-400" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">PlegoHR</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  {t('nav.dashboard')}
-                </button>
-                <button
-                  onClick={() => navigate('/documents')}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                >
-                  {t('nav.documents')}
-                </button>
-                <button
-                  onClick={() => navigate('/leave')}
-                  className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 font-semibold border-b-2 border-teal-600 dark:border-teal-400"
-                >
-                  {t('nav.leave')}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="hidden md:inline">{t('common.logout')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <TopNav role="admin" active="leave" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">

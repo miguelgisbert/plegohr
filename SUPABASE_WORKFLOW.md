@@ -36,7 +36,7 @@ This opens a browser and stores your access token locally.
 
 Project ref for this workspace:
 
-- `czxkbihwjqkcrjsobujv`
+- `czxkbihwjqkcrjsobuji`
 
 Run:
 

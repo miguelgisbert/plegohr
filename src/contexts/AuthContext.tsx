@@ -1,7 +1,9 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from "react";
@@ -14,7 +16,10 @@ interface AuthContextType {
   loading: boolean;
   role: 'admin' | 'employee' | null;
   companyId: string | null;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (
+    email: string,
+    password: string,
+  ) => Promise<'admin' | 'employee' | null>;
   signUp: (
     email: string,
     password: string,
@@ -36,7 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<'admin' | 'employee' | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
 
-  const loadUserProfile = async (userId: string) => {
+  // Returns the effective role, or null when the user is not linked to a
+  // company yet (fresh signup before onboarding / not-yet-accepted invite).
+  const loadUserProfile = useCallback(async (userId: string): Promise<'admin' | 'employee' | null> => {
     try {
       const { data: userRecord, error } = await supabase
         .from('users')
@@ -48,52 +55,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Error loading user profile:', error);
         setRole(null);
         setCompanyId(null);
-        return;
+        return null;
       }
 
-      if (userRecord) {
-        setRole(userRecord.type === 'company' ? 'admin' : 'employee');
+      if (userRecord?.company_id) {
+        const loadedRole = userRecord.type === 'company' ? 'admin' : 'employee';
+        setRole(loadedRole);
         setCompanyId(userRecord.company_id);
-      } else {
-        setRole(null);
-        setCompanyId(null);
+        return loadedRole;
       }
+
+      setRole(null);
+      setCompanyId(null);
+      return null;
     } catch (err) {
       console.error('Unexpected error loading profile:', err);
       setRole(null);
       setCompanyId(null);
+      return null;
     }
-  };
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadUserProfile(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      (async () => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await loadUserProfile(session.user.id);
-        } else {
-          setRole(null);
-          setCompanyId(null);
-        }
-      })();
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
-  const ensureCompanySetup = async (currentUser: User) => {
+  const onboardingAttempted = useRef(false);
+
+  const ensureCompanySetup = useCallback(async (currentUser: User) => {
     const companyName = currentUser.user_metadata?.company_name;
 
     if (!companyName || typeof companyName !== "string") {
@@ -207,9 +192,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     await loadUserProfile(currentUser.id);
-  };
+  }, [loadUserProfile]);
 
-  const signIn = async (email: string, password: string) => {
+
+  // Loads the profile and, when the user signed up with a company name but is
+  // not linked yet (e.g. email confirmation flow), finishes company setup.
+  const refreshProfile = useCallback(async (currentUser: User): Promise<'admin' | 'employee' | null> => {
+    let loadedRole = await loadUserProfile(currentUser.id);
+
+    if (!loadedRole) {
+      const companyName = currentUser.user_metadata?.company_name;
+      if (companyName && typeof companyName === 'string' && !onboardingAttempted.current) {
+        onboardingAttempted.current = true;
+        try {
+          await ensureCompanySetup(currentUser);
+        } catch (err) {
+          console.error('Company onboarding failed:', err);
+        }
+        loadedRole = await loadUserProfile(currentUser.id);
+      }
+    }
+
+    return loadedRole;
+  }, [loadUserProfile, ensureCompanySetup]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (cancelled) return;
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        await refreshProfile(session.user);
+      }
+      if (!cancelled) setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      (async () => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await refreshProfile(session.user);
+        } else {
+          setRole(null);
+          setCompanyId(null);
+        }
+      })();
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, [refreshProfile]);
+
+  const signIn = async (
+    email: string,
+    password: string,
+  ): Promise<'admin' | 'employee' | null> => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -217,8 +261,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
 
     if (data.user) {
+      onboardingAttempted.current = false;
       await ensureCompanySetup(data.user);
+      return await refreshProfile(data.user);
     }
+    return null;
   };
 
   const signUp = async (

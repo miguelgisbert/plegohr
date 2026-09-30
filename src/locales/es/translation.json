@@ -47,8 +47,10 @@
     "statusColumn": "Estado",
     "errors": {
       "networkError": "No se puede conectar al servidor. Comprueba tu conexión a Internet e inténtalo de nuevo.",
-      "networkErrorShort": "Error de conexión"
-    }
+      "networkErrorShort": "Error de conexión",
+      "unexpected": "Se ha producido un error inesperado. Inténtalo de nuevo."
+    },
+    "preview": "Vista previa"
   },
   "nav": {
     "features": "Características",
@@ -179,11 +181,11 @@
       "orContinueWith": "O continúa con",
       "google": "Continuar con Google",
       "linkedin": "Continuar con LinkedIn",
-    "errors": {
-      "signInFailed": "Error al iniciar sesión. Verifica tus credenciales e inténtalo de nuevo.",
-      "googleSignInFailed": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
-      "linkedinSignInFailed": "Error al iniciar sesión con LinkedIn. Inténtalo de nuevo."
-    }
+      "errors": {
+        "signInFailed": "Error al iniciar sesión. Verifica tus credenciales e inténtalo de nuevo.",
+        "googleSignInFailed": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
+        "linkedinSignInFailed": "Error al iniciar sesión con LinkedIn. Inténtalo de nuevo."
+      }
     },
     "forgotPassword": {
       "title": "Olvidé mi Contraseña",
@@ -301,12 +303,10 @@
       "invitationSent": "¡Invitación enviada correctamente!",
       "invitationFailed": "Empleado creado pero el email de invitación falló.",
       "sendFailed": "Error al enviar el email de invitación.",
-      "addFailed": "Error al crear el empleado: {{error}}",
-      "updateFailed": "Error al actualizar el empleado: {{error}}",
-      "deleteFailed": "Error al eliminar el empleado: {{error}}",
       "authError": "Error de autenticación. Por favor, inicia sesión de nuevo.",
       "noCompany": "Empresa no encontrada. Por favor, recarga la página.",
-      "unexpected": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo."
+      "unexpected": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.",
+      "emailNotSent": "Invitación guardada, pero no se pudo enviar el correo. Comparte el enlace de invitación manualmente."
     },
     "invitation": {
       "title": "Empleado Añadido",
@@ -315,17 +315,15 @@
       "copied": "¡Copiado!",
       "close": "Hecho"
     },
-    "credentialsTitle": "Credenciales del empleado",
-    "credentialsDescription": "Comparte estas credenciales con el empleado para que pueda acceder al sistema.",
     "statusCorrected": "Corregido"
   },
   "timeTracking": {
     "title": "Control de Tiempo",
     "subtitle": "Ver todas las entradas de tiempo de los empleados",
     "stats": {
-      "totalEmployees": "Total Empleados Hoy",
+      "totalEmployees": "Empleados con registros",
       "clockedIn": "Actualmente Fichados",
-      "totalHours": "Total Horas Hoy"
+      "totalHours": "Horas totales"
     },
     "filters": {
       "date": "Fecha",
@@ -344,11 +342,32 @@
     },
     "correctionPending": "Corrección Pendiente",
     "downloadPdf": "Descargar PDF",
-    "empty": "No se encontraron entradas de tiempo para esta fecha",
+    "empty": "No se encontraron registros de tiempo en este periodo",
     "status": {
       "active": "Activo",
       "completed": "Completado",
       "corrected": "Corregido"
+    },
+    "period": {
+      "day": "Día",
+      "week": "Semana",
+      "month": "Mes"
+    },
+    "previousPeriod": "Periodo anterior",
+    "nextPeriod": "Periodo siguiente",
+    "chart": {
+      "title": "Horas por empleado",
+      "hours": "Horas"
+    },
+    "pdf": {
+      "reportTitle": "Informe de jornada",
+      "period": "Periodo",
+      "generatedBy": "Generado",
+      "total": "Total",
+      "empty": "No hay registros de tiempo para exportar en este periodo.",
+      "success": "Informe PDF descargado.",
+      "failed": "No se pudo generar el informe PDF.",
+      "preparing": "Preparando PDF..."
     }
   },
   "corrections": {
@@ -379,7 +398,14 @@
       "notes": "Notas de revisión (opcional)",
       "notesPlaceholder": "Añade notas sobre esta decisión..."
     },
-    "empty": "No se encontraron solicitudes de corrección"
+    "empty": "No se encontraron solicitudes de corrección",
+    "myRequests": "Mis solicitudes de corrección",
+    "toast": {
+      "approved": "Corrección aprobada y aplicada al registro de tiempo.",
+      "rejected": "Corrección rechazada.",
+      "applyFailed": "No se pudo aplicar la corrección al registro de tiempo.",
+      "reviewFailed": "No se pudo guardar la revisión. Inténtalo de nuevo."
+    }
   },
   "timer": {
     "title": "Registro de Tiempo",
@@ -415,7 +441,8 @@
     "correctionReason": "Motivo de la corrección",
     "todayHistory": "Entradas de hoy",
     "noEntriesToday": "No hay entradas para hoy",
-    "requestCorrection": "Solicitar Corrección"
+    "requestCorrection": "Solicitar Corrección",
+    "alreadyClockedIn": "Ya has fichado hoy."
   },
   "documents": {
     "title": "Documentos",
@@ -431,7 +458,9 @@
       "description": "Descripción",
       "descriptionPlaceholder": "Descripción del documento...",
       "fileLabel": "Archivo (demo)",
-      "filePlaceholder": "Haz clic para seleccionar un archivo (simulado en demo)"
+      "filePlaceholder": "Haz clic para seleccionar un archivo (simulado en demo)",
+      "requireSignature": "Requiere firma del empleado",
+      "fileHint": "PDF, JPG o PNG. Máximo {{max}} MB."
     },
     "types": {
       "contract": "Contrato",
@@ -477,19 +506,32 @@
     "confirmDelete": "¿Seguro que quieres eliminar este documento?",
     "status": {
       "signed": "Firmado",
-      "pending": "Pendiente"
+      "pending": "Pendiente",
+      "notRequired": "No requerida"
     },
     "toast": {
       "uploaded": "¡Documento subido correctamente!",
       "deleted": "¡Documento eliminado correctamente!",
       "signed": "¡Documento firmado correctamente!",
-      "uploadFailed": "Error al subir el documento: {{error}}",
-      "deleteFailed": "Error al eliminar el documento: {{error}}"
+      "signFailed": "No se pudo firmar el documento. Inténtalo de nuevo.",
+      "alreadySigned": "Este documento ya está firmado.",
+      "signatureNotRequired": "Este documento no requiere firma.",
+      "signatureUpdated": "Requisito de firma actualizado.",
+      "signatureUpdateFailed": "No se pudo actualizar el requisito de firma."
     },
     "errors": {
       "downloadFailed": "Error al descargar el documento. Inténtalo de nuevo.",
       "invalidFileType": "Este tipo de archivo no está permitido. Sube archivos PDF, JPG o PNG.",
-      "fileTooLarge": "El tamaño del archivo supera el máximo permitido."
+      "fileTooLarge": "El tamaño del archivo supera el máximo permitido.",
+      "previewFailed": "No se pudo abrir la vista previa del documento.",
+      "previewNotSupported": "Este tipo de archivo no se puede previsualizar. Descárgalo."
+    },
+    "sign": "Firmar documento",
+    "signing": "Firmando...",
+    "confirmSign": "¿Firmar este documento? Se registrará tu nombre y la fecha de firma.",
+    "actions": {
+      "requireSignature": "Requerir firma",
+      "signatureOptional": "Hacer la firma opcional"
     }
   },
   "leave": {
@@ -599,7 +641,14 @@
       "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
       "createFailed": "Error al crear la cuenta: {{message}}",
       "createAccountFailed": "Error al crear la cuenta",
-      "unexpected": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo."
-    }
+      "unexpected": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.",
+      "accountExists": "Ya existe una cuenta con este correo. Inicia sesión con tu contraseña o solicita un restablecimiento.",
+      "emailMismatch": "Esta invitación se envió a otro correo. Abre el enlace desde tu propio correo de invitación."
+    },
+    "subtitleWithCompany": "Crea tu cuenta para unirte a {{company}}",
+    "successAccepted": "Invitación aceptada. Redirigiendo a tu panel...",
+    "goToDashboard": "Ir al panel",
+    "emailPendingTitle": "Confirma tu correo",
+    "emailPendingText": "Hemos enviado un enlace de confirmación a {{email}}. Haz clic en él para terminar de crear tu cuenta."
   }
 }
