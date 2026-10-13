@@ -61,7 +61,8 @@
     "documents": "Documents",
     "leave": "Vacances",
     "timeTracking": "Control de Temps",
-    "timeCorrections": "Correccions de Temps"
+    "timeCorrections": "Correccions de Temps",
+    "settings": "Configuració"
   },
   "demo": {
     "banner": "Mode Demo — Les dades mostrades són fictícies. Cap acció es guarda.",
@@ -255,6 +256,23 @@
       "createCompany": "Error en crear l'empresa. Torna-ho a intentar.",
       "linkProfile": "Error en vincular el perfil amb l'empresa. Torna-ho a intentar.",
       "createUser": "Error en crear el compte d'usuari. Torna-ho a intentar."
+    },
+    "oauth": {
+      "callback": {
+        "success": "Sessió iniciada correctament",
+        "closing": "Tancant aquesta finestra…",
+        "manualClose": "Si aquesta finestra no es tanca automàticament, pots tancar-la tu mateix.",
+        "error": "No s'ha pogut iniciar la sessió. Torna-ho a intentar."
+      }
+    },
+    "onboarding": {
+      "title": "Crea la teva empresa",
+      "subtitle": "El teu compte està llest. Tria un nom per a la teva empresa per continuar.",
+      "button": "Crear empresa",
+      "invitedHint": "T'han invitat a una empresa? Fes servir l'enllaç d'invitació del teu correu en lloc de crear una empresa.",
+      "errors": {
+        "createFailed": "No s'ha pogut crear l'empresa. Torna-ho a intentar."
+      }
     }
   },
   "dashboard": {
@@ -650,5 +668,55 @@
     "goToDashboard": "Anar al tauler",
     "emailPendingTitle": "Confirma el teu correu",
     "emailPendingText": "Hem enviat un enllaç de confirmació a {{email}}. Fes-hi clic per acabar de crear el teu compte."
+  },
+  "settings": {
+    "title": "Configuració de l'empresa",
+    "profile": {
+      "title": "Perfil de l'empresa",
+      "logo": "Logotip",
+      "logoHint": "PNG, JPG, WEBP o SVG, fins a 2 MB. El logotip es mostra a la part superior de l'aplicació.",
+      "uploadLogo": "Pujar logotip",
+      "companyName": "Nom de l'empresa",
+      "saved": "Empresa actualitzada.",
+      "errors": {
+        "saveFailed": "No s'ha pogut desar l'empresa. {{message}}",
+        "logoType": "Tipus de fitxer no vàlid. Usa PNG, JPG, WEBP o SVG.",
+        "logoSize": "El logotip ha de pesar 2 MB o menys.",
+        "logoUploadFailed": "No s'ha pogut pujar el logotip. {{message}}"
+      }
+    },
+    "templates": {
+      "title": "Plantilles de correu",
+      "subtitle": "Personalitza els correus que s'envien als teus empleats. La plantilla d'invitació s'usa en convidar un empleat; les de nòmina i contracte estan preparades per a funcions futures.",
+      "subject": "Assumpte",
+      "body": "Cos (HTML)",
+      "saved": "Plantilla desada.",
+      "errors": {
+        "saveFailed": "No s'ha pogut desar la plantilla. {{message}}"
+      },
+      "types": {
+        "invitation": {
+          "title": "Invitació d'empleat",
+          "description": "S'envia quan convides un empleat a unir-se a l'empresa."
+        },
+        "payslip": {
+          "title": "Nòmina mensual",
+          "description": "S'usa en enviar la nòmina mensual a un empleat."
+        },
+        "contract": {
+          "title": "Contracte de treball",
+          "description": "S'envia quan l'empleat rep el seu contracte."
+        }
+      }
+    },
+    "danger": {
+      "title": "Eliminar compte d'empresa",
+      "description": "Això elimina permanentment l'empresa, tots els seus empleats i totes les seves dades (documents, permisos, control horari). Aquesta acció no es pot desfer.",
+      "confirmLabel": "Escriu el nom de la teva empresa ({{name}}) per confirmar",
+      "deleteButton": "Eliminar el meu compte i totes les dades",
+      "errors": {
+        "deleteFailed": "No s'ha pogut eliminar el compte. {{message}}"
+      }
+    }
   }
 }

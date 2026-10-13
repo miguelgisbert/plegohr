@@ -61,7 +61,8 @@
     "documents": "Documents",
     "leave": "Leave",
     "timeTracking": "Time Tracking",
-    "timeCorrections": "Time Corrections"
+    "timeCorrections": "Time Corrections",
+    "settings": "Settings"
   },
   "demo": {
     "banner": "Demo Mode — Data shown is fictional. No actions are saved.",
@@ -255,6 +256,23 @@
       "createCompany": "Failed to create company. Please try again.",
       "linkProfile": "Failed to link profile to company. Please try again.",
       "createUser": "Failed to create user account. Please try again."
+    },
+    "oauth": {
+      "callback": {
+        "success": "Signed in successfully",
+        "closing": "Closing this window…",
+        "manualClose": "If this window doesn't close automatically, you can close it yourself.",
+        "error": "Sign-in failed. Please try again."
+      }
+    },
+    "onboarding": {
+      "title": "Create your company",
+      "subtitle": "Your account is ready. Choose a name for your company to continue.",
+      "button": "Create company",
+      "invitedHint": "Were you invited to join a company? Use the invitation link in your email instead of creating a company.",
+      "errors": {
+        "createFailed": "Failed to create the company. Please try again."
+      }
     }
   },
   "dashboard": {
@@ -650,5 +668,55 @@
     "goToDashboard": "Go to dashboard",
     "emailPendingTitle": "Confirm your email",
     "emailPendingText": "We sent a confirmation link to {{email}}. Click it to finish creating your account."
+  },
+  "settings": {
+    "title": "Company settings",
+    "profile": {
+      "title": "Company profile",
+      "logo": "Logo",
+      "logoHint": "PNG, JPG, WEBP or SVG, up to 2 MB. The logo is shown at the top of the app.",
+      "uploadLogo": "Upload logo",
+      "companyName": "Company name",
+      "saved": "Company updated.",
+      "errors": {
+        "saveFailed": "Could not save the company. {{message}}",
+        "logoType": "Invalid file type. Use PNG, JPG, WEBP or SVG.",
+        "logoSize": "The logo must be 2 MB or smaller.",
+        "logoUploadFailed": "Could not upload the logo. {{message}}"
+      }
+    },
+    "templates": {
+      "title": "Email templates",
+      "subtitle": "Customize the emails sent to your employees. The invitation template is used when you invite an employee; the payslip and contract templates are ready for upcoming features.",
+      "subject": "Subject",
+      "body": "Body (HTML)",
+      "saved": "Template saved.",
+      "errors": {
+        "saveFailed": "Could not save the template. {{message}}"
+      },
+      "types": {
+        "invitation": {
+          "title": "Employee invitation",
+          "description": "Sent when you invite an employee to join the company."
+        },
+        "payslip": {
+          "title": "Monthly payslip",
+          "description": "Used when sending the monthly payslip to an employee."
+        },
+        "contract": {
+          "title": "Employment contract",
+          "description": "Sent when the employee receives their contract."
+        }
+      }
+    },
+    "danger": {
+      "title": "Delete company account",
+      "description": "This permanently deletes the company, all its employees and all their data (documents, leave, time tracking). This action cannot be undone.",
+      "confirmLabel": "Type your company name ({{name}}) to confirm",
+      "deleteButton": "Delete my account and all data",
+      "errors": {
+        "deleteFailed": "Could not delete the account. {{message}}"
+      }
+    }
   }
 }

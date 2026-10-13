@@ -28,6 +28,7 @@ interface AuthContextType {
   ) => Promise<{ requiresEmailConfirmation: boolean }>;
   signInWithGoogle: () => Promise<void>;
   signInWithLinkedIn: () => Promise<void>;
+  completeCompanySetup: (companyName: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -118,7 +119,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("User record creation failed. Please try logging in.");
     }
 
-    if (freshUser.company_id || freshUser.type === "employee") {
+    // Only skip when the user already belongs to a company. Employees invited
+    // by a company get company_id from accept_invitation, so they never reach
+    // company creation here. The old `type === "employee"` guard broke fresh
+    // signups because the DB trigger defaults new users to 'employee'.
+    if (freshUser.company_id) {
       return;
     }
 
@@ -281,6 +286,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           full_name: fullName,
           company_name: companyName,
+          // Self-registration on the web is always a company account; the
+          // handle_new_user() trigger reads this to set users.type directly.
+          type: companyName ? "company" : "employee",
         },
       },
     });
@@ -310,24 +318,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { requiresEmailConfirmation: !data.session };
   };
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
+  // Finishes onboarding for users who registered without a company (e.g.
+  // social login): stores the company name in the auth metadata and runs the
+  // same company-creation flow as email/password signup.
+  const completeCompanySetup = async (companyName: string) => {
+    const name = companyName.trim();
+    if (!name) {
+      throw new Error("Company name is required");
+    }
+
+    const { data, error } = await supabase.auth.updateUser({
+      data: { company_name: name, type: "company" },
     });
     if (error) throw error;
+    if (!data.user) {
+      throw new Error("Failed to update user metadata");
+    }
+
+    onboardingAttempted.current = false;
+    await ensureCompanySetup(data.user);
+  };
+
+  // Opens the provider consent screen in a popup so the current page stays
+  // open. The popup lands on /auth/callback, which stores the session (shared
+  // via localStorage) and closes itself; this tab picks the session up through
+  // onAuthStateChange. Falls back to a full-page redirect if the popup is
+  // blocked by the browser.
+  const signInWithOAuthPopup = async (provider: "google" | "linkedin_oidc") => {
+    // Note: do NOT pass "noopener" here — with noopener, window.open returns
+    // null and we could no longer navigate the popup ourselves. Center the
+    // popup on the screen that contains the current window.
+    const popupWidth = 520;
+    const popupHeight = 680;
+    const left = Math.round(
+      window.screenX + (window.outerWidth - popupWidth) / 2,
+    );
+    const top = Math.round(
+      window.screenY + (window.outerHeight - popupHeight) / 2,
+    );
+    const popup = window.open(
+      "",
+      "plego-oauth-login",
+      `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`,
+    );
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: true,
+      },
+    });
+
+    if (error) {
+      popup?.close();
+      throw error;
+    }
+
+    if (!data.url) {
+      popup?.close();
+      throw new Error("OAuth provider did not return an authorization URL");
+    }
+
+    if (popup) {
+      popup.location.href = data.url;
+    } else {
+      window.location.href = data.url;
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    await signInWithOAuthPopup("google");
   };
 
   const signInWithLinkedIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "linkedin_oidc",
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-    if (error) throw error;
+    await signInWithOAuthPopup("linkedin_oidc");
   };
 
   const resetPassword = async (email: string) => {
@@ -354,6 +419,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signInWithGoogle,
         signInWithLinkedIn,
+        completeCompanySetup,
         resetPassword,
         signOut,
       }}

@@ -9,7 +9,7 @@ import { getErrorMessage } from "../utils/errorUtils";
 
 export function SignupPage() {
   const { t } = useTranslation();
-  const { signUp, signInWithGoogle, signInWithLinkedIn, role } = useAuth();
+  const { signUp, signInWithGoogle, signInWithLinkedIn, role, session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     companyName: "",
@@ -38,15 +38,28 @@ export function SignupPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Navigate on email signup (gated on success) and on social login (session
+  // arrives via onAuthStateChange from the OAuth popup).
   useEffect(() => {
-    if (success) {
+    if (success || session) {
       if (role === 'admin') {
         navigate('/dashboard');
       } else if (role === 'employee') {
         navigate('/employee-dashboard');
       }
     }
-  }, [role, success, navigate]);
+  }, [role, success, session, navigate]);
+
+  // Signed in but not linked to any company yet (fresh social signup): self
+  // registration always creates a company, so continue at the onboarding step.
+  useEffect(() => {
+    if (authLoading || !session || role) return;
+    const timer = setTimeout(
+      () => navigate("/company-onboarding", { replace: true }),
+      800,
+    );
+    return () => clearTimeout(timer);
+  }, [authLoading, session, role, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

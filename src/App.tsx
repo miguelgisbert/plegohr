@@ -10,6 +10,8 @@ import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { AcceptInvitationPage } from './pages/AcceptInvitationPage';
+import { AuthCallbackPage } from './pages/AuthCallbackPage';
+import { CompanyOnboardingPage } from './pages/CompanyOnboardingPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Heavy pages (charts, PDF engine, document viewers) load on demand so the
@@ -28,6 +30,7 @@ const PreviewCompanyDocumentsPage = lazy(() => import('./pages/PreviewCompanyDoc
 const PreviewEmployeeDocumentsPage = lazy(() => import('./pages/PreviewEmployeeDocumentsPage').then((m) => ({ default: m.PreviewEmployeeDocumentsPage })));
 const PreviewCompanyLeavePage = lazy(() => import('./pages/PreviewCompanyLeavePage').then((m) => ({ default: m.PreviewCompanyLeavePage })));
 const PreviewEmployeeLeavePage = lazy(() => import('./pages/PreviewEmployeeLeavePage').then((m) => ({ default: m.PreviewEmployeeLeavePage })));
+const CompanySettingsPage = lazy(() => import('./pages/CompanySettingsPage').then((m) => ({ default: m.CompanySettingsPage })));
 
 function PageFallback() {
   const { t } = useTranslation();
@@ -55,6 +58,8 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/company-onboarding" element={<CompanyOnboardingPage />} />
 
             {/* Preview / demo routes (no auth required) */}
             <Route path="/preview/company-dashboard" element={<PreviewCompanyDashboardPage />} />
@@ -73,6 +78,7 @@ function App() {
             <Route path="/employee-leave" element={<ProtectedRoute requiredRole="employee"><EmployeeLeavePage /></ProtectedRoute>} />
             <Route path="/time-tracking" element={<ProtectedRoute requiredRole="admin"><AdminTimeTrackingPage /></ProtectedRoute>} />
             <Route path="/time-corrections" element={<ProtectedRoute requiredRole="admin"><AdminCorrectionsPage /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute requiredRole="admin"><CompanySettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </Suspense>

@@ -61,7 +61,8 @@
     "documents": "Documentos",
     "leave": "Vacaciones",
     "timeTracking": "Control de Tiempo",
-    "timeCorrections": "Correcciones de Tiempo"
+    "timeCorrections": "Correcciones de Tiempo",
+    "settings": "Configuración"
   },
   "demo": {
     "banner": "Modo Demo — Los datos mostrados son ficticios. Ninguna acción se guarda.",
@@ -137,7 +138,7 @@
         "price": "29€",
         "period": "/mes",
         "features": [
-          "Hasta 100 trabajadores",
+          "Hasta 50 trabajadores",
           "Control de tiempo avanzado",
           "Almacenamiento de documentos (10GB)",
           "Informes y analíticas avanzadas",
@@ -255,6 +256,23 @@
       "createCompany": "Error al crear la empresa. Inténtalo de nuevo.",
       "linkProfile": "Error al vincular el perfil con la empresa. Inténtalo de nuevo.",
       "createUser": "Error al crear la cuenta de usuario. Inténtalo de nuevo."
+    },
+    "oauth": {
+      "callback": {
+        "success": "Sesión iniciada correctamente",
+        "closing": "Cerrando esta ventana…",
+        "manualClose": "Si esta ventana no se cierra automáticamente, puedes cerrarla tú mismo.",
+        "error": "No se pudo iniciar la sesión. Inténtalo de nuevo."
+      }
+    },
+    "onboarding": {
+      "title": "Crea tu empresa",
+      "subtitle": "Tu cuenta está lista. Elige un nombre para tu empresa para continuar.",
+      "button": "Crear empresa",
+      "invitedHint": "¿Te invitaron a una empresa? Usa el enlace de invitación de tu correo en lugar de crear una empresa.",
+      "errors": {
+        "createFailed": "No se pudo crear la empresa. Inténtalo de nuevo."
+      }
     }
   },
   "dashboard": {
@@ -650,5 +668,55 @@
     "goToDashboard": "Ir al panel",
     "emailPendingTitle": "Confirma tu correo",
     "emailPendingText": "Hemos enviado un enlace de confirmación a {{email}}. Haz clic en él para terminar de crear tu cuenta."
+  },
+  "settings": {
+    "title": "Configuración de la empresa",
+    "profile": {
+      "title": "Perfil de la empresa",
+      "logo": "Logotipo",
+      "logoHint": "PNG, JPG, WEBP o SVG, hasta 2 MB. El logotipo se muestra en la parte superior de la aplicación.",
+      "uploadLogo": "Subir logotipo",
+      "companyName": "Nombre de la empresa",
+      "saved": "Empresa actualizada.",
+      "errors": {
+        "saveFailed": "No se pudo guardar la empresa. {{message}}",
+        "logoType": "Tipo de archivo no válido. Usa PNG, JPG, WEBP o SVG.",
+        "logoSize": "El logotipo debe pesar 2 MB o menos.",
+        "logoUploadFailed": "No se pudo subir el logotipo. {{message}}"
+      }
+    },
+    "templates": {
+      "title": "Plantillas de correo",
+      "subject": "Asunto",
+      "body": "Cuerpo (HTML)",
+      "subtitle": "Personaliza los correos que se envían a tus empleados. La plantilla de invitación se usa al invitar a un empleado; las de nómina y contrato están listas para próximas funcionalidades.",
+      "saved": "Plantilla guardada.",
+      "errors": {
+        "saveFailed": "No se pudo guardar la plantilla. {{message}}"
+      },
+      "types": {
+        "invitation": {
+          "title": "Invitación de empleado",
+          "description": "Se envía cuando invitas a un empleado a unirse a la empresa."
+        },
+        "payslip": {
+          "title": "Nómina mensual",
+          "description": "Se usa al enviar la nómina mensual a un empleado."
+        },
+        "contract": {
+          "title": "Contrato de trabajo",
+          "description": "Se envía cuando el empleado recibe su contrato."
+        }
+      }
+    },
+    "danger": {
+      "title": "Eliminar cuenta de empresa",
+      "description": "Esto elimina permanentemente la empresa, todos sus empleados y todos sus datos (documentos, vacaciones, control horario). Esta acción no se puede deshacer.",
+      "confirmLabel": "Escribe el nombre de tu empresa ({{name}}) para confirmar",
+      "deleteButton": "Eliminar mi cuenta y todos los datos",
+      "errors": {
+        "deleteFailed": "No se pudo eliminar la cuenta. {{message}}"
+      }
+    }
   }
 }

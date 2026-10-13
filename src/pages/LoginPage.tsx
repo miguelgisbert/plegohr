@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,13 +9,36 @@ import { getErrorMessage } from '../utils/errorUtils';
 
 export function LoginPage() {
   const { t } = useTranslation();
-  const { signIn, signInWithGoogle, signInWithLinkedIn } = useAuth();
+  const { signIn, signInWithGoogle, signInWithLinkedIn, session, role, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // After a social login the session arrives via onAuthStateChange (popup
+  // flow), so navigate here instead of in the button handlers.
+  useEffect(() => {
+    if (role === 'admin') {
+      navigate('/dashboard', { replace: true });
+    } else if (role === 'employee') {
+      navigate('/employee-dashboard', { replace: true });
+    }
+  }, [role, navigate]);
+
+  // Signed in but not linked to any company yet (fresh signup): self
+  // registration always creates a company, so continue at the onboarding step.
+  // Small delay so the role can resolve first and we don't flash this for
+  // users who already belong to a company.
+  useEffect(() => {
+    if (authLoading || !session || role) return;
+    const timer = setTimeout(
+      () => navigate('/company-onboarding', { replace: true }),
+      800,
+    );
+    return () => clearTimeout(timer);
+  }, [authLoading, session, role, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

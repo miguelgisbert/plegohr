@@ -45,6 +45,12 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#39;');
 }
 
+// Replaces {{placeholder}} tokens. Values are expected to be pre-escaped
+// when the result is injected into HTML.
+function renderTemplate(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (match, key) => vars[key] ?? match);
+}
+
 async function sendInvitationEmail(params: {
   apiKey: string;
   from: string;
@@ -52,8 +58,24 @@ async function sendInvitationEmail(params: {
   inviteUrl: string;
   employeeName: string;
   companyName: string;
+  // Per-company template from email_templates (type 'invitation'), if any.
+  customTemplate?: { subject: string; body: string } | null;
 }): Promise<{ ok: boolean; detail: string }> {
-  const html = `
+  const subject = params.customTemplate
+    ? renderTemplate(params.customTemplate.subject, {
+        company_name: params.companyName,
+        employee_name: params.employeeName,
+        invite_url: params.inviteUrl,
+      })
+    : `You have been invited to ${params.companyName} on PlegoHR`;
+
+  const html = params.customTemplate
+    ? renderTemplate(params.customTemplate.body, {
+        company_name: escapeHtml(params.companyName),
+        employee_name: escapeHtml(params.employeeName),
+        invite_url: escapeHtml(params.inviteUrl),
+      })
+    : `
     <!DOCTYPE html>
     <html>
       <body style="font-family: Arial, Helvetica, sans-serif; background: #f4f7f7; padding: 24px;">
@@ -108,7 +130,7 @@ async function sendInvitationEmail(params: {
       body: JSON.stringify({
         from: params.from,
         to: [params.to],
-        subject: `You have been invited to ${params.companyName} on PlegoHR`,
+        subject,
         html,
       }),
     });
@@ -195,6 +217,14 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
     const companyName = company?.name ?? 'your team';
 
+    // Company-specific invitation template, when saved from company settings.
+    const { data: invitationTemplate } = await supabase
+      .from('email_templates')
+      .select('subject, body')
+      .eq('company_id', companyId)
+      .eq('template_type', 'invitation')
+      .maybeSingle();
+
     const appUrl = (typeof body.appUrl === 'string' && body.appUrl) ||
       Deno.env.get('APP_URL') ||
       'http://localhost:5173';
@@ -270,6 +300,7 @@ Deno.serve(async (req: Request) => {
       inviteUrl,
       employeeName: employee.full_name || email,
       companyName,
+      customTemplate: invitationTemplate,
     });
 
     if (!emailResult.ok) {
